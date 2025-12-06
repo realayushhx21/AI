@@ -1,0 +1,115 @@
+import java.util.*;
+
+class State {
+    int[] board;      // board[i] = row of queen in column i
+    State parent;
+    int g;            // cost so far
+    int f;            // g + h
+
+    public State(int[] board, State parent) {
+        this.board = board;
+        this.parent = parent;
+
+        this.g = (parent == null) ? 0 : parent.g + 1;
+        this.f = g + h();
+    }
+
+    // Heuristic: number of attacking pairs
+    public int h() {
+        int attacks = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = i + 1; j < 8; j++) {
+                // Same row
+                if (board[i] == board[j]) attacks++;
+                // Diagonal check
+                if (Math.abs(board[i] - board[j]) == Math.abs(i - j)) attacks++;
+            }
+        }
+        return attacks;
+    }
+
+    public boolean isGoal() {
+        return h() == 0;
+    }
+
+    // Generate all possible successor states
+    public List<State> generateSuccessors() {
+        List<State> successors = new ArrayList<>();
+
+        // Move queen in each column to any other row (0–7)
+        for (int col = 0; col < 8; col++) {
+            for (int row = 0; row < 8; row++) {
+                if (row != board[col]) {
+                    int[] newBoard = board.clone();
+                    newBoard[col] = row;
+                    successors.add(new State(newBoard, this));
+                }
+            }
+        }
+        return successors;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof State)) return false;
+        return Arrays.equals(board, ((State)obj).board);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(board);
+    }
+
+    public void printBoard() {
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                if (board[c] == r)
+                    System.out.print("Q ");
+                else
+                    System.out.print(". ");
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
+    public void printPath() {
+        if (parent != null)
+            parent.printPath();
+        printBoard();
+    }
+}
+
+public class AStar8Queens {
+    public static void main(String[] args) {
+
+        // Initial board: all queens in row 0
+        int[] startBoard = {0,0,0,0,0,0,0,0};
+        State start = new State(startBoard, null);
+
+        PriorityQueue<State> open = new PriorityQueue<>(Comparator.comparingInt(s -> s.f));
+        Set<State> visited = new HashSet<>();
+
+        open.add(start);
+
+        while (!open.isEmpty()) {
+            State current = open.poll();
+            if (visited.contains(current)) continue;
+            visited.add(current);
+
+            if (current.isGoal()) {
+                System.out.println("Solution found:");
+                current.printPath();
+                return;
+            }
+
+            for (State next : current.generateSuccessors()) {
+                if (!visited.contains(next)) {
+                    open.add(next);
+                }
+            }
+        }
+
+        System.out.println("No solution found.");
+    }
+}
