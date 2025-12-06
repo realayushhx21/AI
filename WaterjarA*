@@ -1,0 +1,94 @@
+import java.util.*;
+
+class Node {
+    int x, y;      // water in jar X and Y
+    int cost;      // g(n)
+    int h;         // heuristic
+    Node parent;   // to print path
+
+    Node(int x, int y, int cost, int h, Node parent) {
+        this.x = x;
+        this.y = y;
+        this.cost = cost;
+        this.h = h;
+        this.parent = parent;
+    }
+
+    int f() {
+        return cost + h;
+    }
+}
+
+public class Main {
+
+    // very simple heuristic: how far any jar is from goal
+    static int heuristic(int x, int y, int goal) {
+        return Math.min(Math.abs(goal - x), Math.abs(goal - y));
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Capacity of Jar X: ");
+        int capX = sc.nextInt();
+
+        System.out.print("Capacity of Jar Y: ");
+        int capY = sc.nextInt();
+
+        System.out.print("Goal: ");
+        int goal = sc.nextInt();
+
+        PriorityQueue<Node> pq = new PriorityQueue<>(Comparator.comparingInt(Node::f));
+        HashSet<String> visited = new HashSet<>();
+
+        // Start with both jars empty
+        pq.add(new Node(0, 0, 0, heuristic(0, 0, goal), null));
+
+        while (!pq.isEmpty()) {
+            Node cur = pq.poll();
+
+            // goal reached
+            if (cur.x == goal || cur.y == goal) {
+                printPath(cur);
+                return;
+            }
+
+            String key = cur.x + "," + cur.y;
+            if (visited.contains(key)) continue;
+            visited.add(key);
+
+            // generate next possible states
+            add(pq, cur, capX, cur.y, goal); // fill X
+            add(pq, cur, cur.x, capY, goal); // fill Y
+            add(pq, cur, 0, cur.y, goal);    // empty X
+            add(pq, cur, cur.x, 0, goal);    // empty Y
+
+            // pour X -> Y
+            int moveXY = Math.min(cur.x, capY - cur.y);
+            add(pq, cur, cur.x - moveXY, cur.y + moveXY, goal);
+
+            // pour Y -> X
+            int moveYX = Math.min(cur.y, capX - cur.x);
+            add(pq, cur, cur.x + moveYX, cur.y - moveYX, goal);
+        }
+
+        System.out.println("No solution found.");
+    }
+
+    static void add(PriorityQueue<Node> pq, Node cur, int nx, int ny, int goal) {
+        pq.add(new Node(nx, ny, cur.cost + 1, heuristic(nx, ny, goal), cur));
+    }
+
+    static void printPath(Node n) {
+        Stack<Node> stack = new Stack<>();
+        while (n != null) {
+            stack.push(n);
+            n = n.parent;
+        }
+        System.out.println("\nSolution Path:");
+        while (!stack.isEmpty()) {
+            Node s = stack.pop();
+            System.out.println("(" + s.x + ", " + s.y + ")");
+        }
+    }
+}
