@@ -1,0 +1,95 @@
+import java.util.*;
+
+class Node {
+    int x, y;        // position
+    int g, h, f;     // g = cost, h = heuristic, f = g + h
+    Node parent;     // for printing path
+
+    Node(int x, int y, int g, int h, Node parent) {
+        this.x = x;
+        this.y = y;
+        this.g = g;
+        this.h = h;
+        this.f = g + h;
+        this.parent = parent;
+    }
+}
+
+public class Main {
+
+    // Simple Manhattan Distance heuristic
+    static int heuristic(int x, int y, int gx, int gy) {
+        return Math.abs(x - gx) + Math.abs(y - gy);
+    }
+
+    // To print final path
+    static void printPath(Node n) {
+        Stack<Node> st = new Stack<>();
+        while (n != null) {
+            st.push(n);
+            n = n.parent;
+        }
+
+        System.out.println("\nPath found:");
+        while (!st.isEmpty()) {
+            Node p = st.pop();
+            System.out.println("(" + p.x + "," + p.y + ")");
+        }
+    }
+
+    public static void main(String[] args) {
+
+        // 0 = free cell, 1 = blocked
+        int[][] maze = {
+            {0, 0, 0, 1, 0},
+            {1, 0, 0, 1, 0},
+            {0, 0, 1, 0, 0},
+            {0, 1, 0, 0, 1},
+            {0, 0, 0, 0, 0}
+        };
+
+        int sx = 0, sy = 0;     // start
+        int gx = 4, gy = 4;     // goal
+
+        PriorityQueue<Node> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a.f));
+        boolean[][] visited = new boolean[maze.length][maze[0].length];
+
+        pq.add(new Node(sx, sy, 0, heuristic(sx, sy, gx, gy), null));
+
+        int[][] moves = { {1,0}, {-1,0}, {0,1}, {0,-1} }; // 4 directions
+
+        while (!pq.isEmpty()) {
+            Node cur = pq.poll();
+
+            if (visited[cur.x][cur.y]) continue;
+            visited[cur.x][cur.y] = true;
+
+            System.out.println("Visiting (" + cur.x + "," + cur.y + "), g=" + cur.g +
+                               " h=" + cur.h + " f=" + cur.f);
+
+            if (cur.x == gx && cur.y == gy) {
+                System.out.println("\nGoal reached!");
+                printPath(cur);
+                return;
+            }
+
+            for (int[] d : moves) {
+                int nx = cur.x + d[0];
+                int ny = cur.y + d[1];
+
+                if (nx < 0 || ny < 0 || nx >= maze.length || ny >= maze[0].length)
+                    continue;
+
+                if (maze[nx][ny] == 1) continue;        // blocked
+                if (visited[nx][ny]) continue;         // already visited
+
+                int newG = cur.g + 1;
+                int h = heuristic(nx, ny, gx, gy);
+
+                pq.add(new Node(nx, ny, newG, h, cur));
+            }
+        }
+
+        System.out.println("No path found.");
+    }
+}
