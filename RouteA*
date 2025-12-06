@@ -1,0 +1,112 @@
+import java.util.*;
+
+public class Main {
+
+    static Map<String, Integer> h = new HashMap<>();                   // heuristic (SLD)
+    static Map<String, Map<String, Integer>> g = new HashMap<>();      // graph with distances
+
+    static void add(String u, String v, int cost) {
+        g.putIfAbsent(u, new HashMap<>());
+        g.putIfAbsent(v, new HashMap<>());
+        g.get(u).put(v, cost);
+        g.get(v).put(u, cost);
+    }
+
+    static class Node {
+        String city;
+        int gCost;  // cost from start
+        int fCost;  // g + h
+
+        Node(String city, int gCost, int hCost) {
+            this.city = city;
+            this.gCost = gCost;
+            this.fCost = gCost + hCost;
+        }
+    }
+
+    public static void main(String[] args) {
+
+        // ---------------- Heuristics (Straight Line Distance to Bucharest) ----------------
+        h.put("Arad",366); h.put("Bucharest",0); h.put("Craiova",160);
+        h.put("Drobeta",242); h.put("Eforie",161); h.put("Fagaras",176);
+        h.put("Giurgiu",77); h.put("Hirsova",151); h.put("Iasi",226);
+        h.put("Lugoj",244); h.put("Mehadia",241); h.put("Neamt",234);
+        h.put("Oradea",380); h.put("Pitesti",100); h.put("RimnicuVilcea",193);
+        h.put("Sibiu",253); h.put("Timisoara",329); h.put("Urziceni",80);
+        h.put("Vaslui",199); h.put("Zerind",374);
+
+        // ---------------- Graph with Actual Distances ----------------
+        add("Arad","Zerind",75);
+        add("Arad","Sibiu",140);
+        add("Arad","Timisoara",118);
+        add("Zerind","Oradea",71);
+        add("Oradea","Sibiu",151);
+        add("Timisoara","Lugoj",111);
+        add("Lugoj","Mehadia",70);
+        add("Mehadia","Drobeta",75);
+        add("Drobeta","Craiova",120);
+        add("Craiova","RimnicuVilcea",146);
+        add("Craiova","Pitesti",138);
+        add("RimnicuVilcea","Sibiu",80);
+        add("RimnicuVilcea","Pitesti",97);
+        add("Sibiu","Fagaras",99);
+        add("Fagaras","Bucharest",211);
+        add("Pitesti","Bucharest",101);
+        add("Bucharest","Giurgiu",90);
+        add("Bucharest","Urziceni",85);
+        add("Urziceni","Hirsova",98);
+        add("Hirsova","Eforie",86);
+        add("Urziceni","Vaslui",142);
+        add("Vaslui","Iasi",92);
+        add("Iasi","Neamt",87);
+
+        String start = "Arad";
+        String goal = "Bucharest";
+
+        // ---------------- Priority Queue (A*) ----------------
+        PriorityQueue<Node> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a.fCost));
+
+        pq.add(new Node(start, 0, h.get(start)));
+
+        Map<String, Integer> dist = new HashMap<>();   // g(n)
+        Map<String, String> parent = new HashMap<>();  // for path
+        dist.put(start, 0);
+
+        Set<String> visited = new HashSet<>();
+
+        while (!pq.isEmpty()) {
+            Node current = pq.poll();
+
+            if (visited.contains(current.city))
+                continue;
+
+            visited.add(current.city);
+
+            if (current.city.equals(goal)) {
+                List<String> path = new ArrayList<>();
+                String c = goal;
+
+                while (c != null) {
+                    path.add(c);
+                    c = parent.get(c);
+                }
+
+                Collections.reverse(path);
+                System.out.println("Path: " + path);
+                System.out.println("Total Cost = " + current.gCost);
+                return;
+            }
+
+            for (String neigh : g.get(current.city).keySet()) {
+                int cost = g.get(current.city).get(neigh);
+                int newG = current.gCost + cost;
+
+                if (!dist.containsKey(neigh) || newG < dist.get(neigh)) {
+                    dist.put(neigh, newG);
+                    parent.put(neigh, current.city);
+                    pq.add(new Node(neigh, newG, h.get(neigh)));
+                }
+            }
+        }
+    }
+}
