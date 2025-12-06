@@ -1,0 +1,140 @@
+import java.util.*;
+
+class State {
+    int missionariesLeft;
+    int cannibalsLeft;
+    boolean boatIsLeft;
+    State parent;
+    int g;  // cost so far
+    int f;  // g + h
+
+    public State(int missionariesLeft, int cannibalsLeft, boolean boatIsLeft, State parent) {
+        this.missionariesLeft = missionariesLeft;
+        this.cannibalsLeft = cannibalsLeft;
+        this.boatIsLeft = boatIsLeft;
+        this.parent = parent;
+
+        this.g = (parent == null) ? 0 : parent.g + 1;
+        this.f = g + h();
+    }
+
+    // Heuristic: number of people left on left bank
+    public int h() {
+        return missionariesLeft + cannibalsLeft;
+    }
+
+    public boolean isGoal() {
+        return missionariesLeft == 0 && cannibalsLeft == 0 && !boatIsLeft;
+    }
+
+    public boolean isValid() {
+        int missionariesRight = 3 - missionariesLeft;
+        int cannibalsRight = 3 - cannibalsLeft;
+
+        if (missionariesLeft < 0 || missionariesLeft > 3 ||
+            cannibalsLeft < 0 || cannibalsLeft > 3)
+            return false;
+
+        // Missionaries must not be outnumbered on either side
+        if ((missionariesLeft > 0 && missionariesLeft < cannibalsLeft) ||
+            (missionariesRight > 0 && missionariesRight < cannibalsRight))
+            return false;
+
+        return true;
+    }
+
+    public List<State> generateSuccessors() {
+        List<State> successors = new ArrayList<>();
+        int[][] moves = {
+            {1, 0}, {2, 0}, {0, 1}, {0, 2}, {1, 1}
+        };
+
+        for (int[] move : moves) {
+            int m = move[0];
+            int c = move[1];
+
+            int newML = missionariesLeft;
+            int newCL = cannibalsLeft;
+            boolean newBoat = !boatIsLeft;
+
+            if (boatIsLeft) {     // boat on left -> move to right
+                newML -= m;
+                newCL -= c;
+            } else {              // boat on right -> move to left
+                newML += m;
+                newCL += c;
+            }
+
+            State newState = new State(newML, newCL, newBoat, this);
+
+            if (newState.isValid()) {
+                successors.add(newState);
+            }
+        }
+
+        return successors;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof State)) return false;
+        State s = (State) obj;
+
+        return missionariesLeft == s.missionariesLeft &&
+               cannibalsLeft == s.cannibalsLeft &&
+               boatIsLeft == s.boatIsLeft;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(missionariesLeft, cannibalsLeft, boatIsLeft);
+    }
+
+    public void printPath() {
+        if (parent != null)
+            parent.printPath();
+        System.out.println(this);
+    }
+
+    @Override
+    public String toString() {
+        return "Left[M=" + missionariesLeft + ", C=" + cannibalsLeft + "] | Right[M=" +
+                (3 - missionariesLeft) + ", C=" + (3 - cannibalsLeft) + "] | Boat: " +
+                (boatIsLeft ? "Left" : "Right");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        State initial = new State(3, 3, true, null);
+
+        PriorityQueue<State> open = new PriorityQueue<>(
+            Comparator.comparingInt(s -> s.f)
+        );
+
+        Set<State> visited = new HashSet<>();
+
+        open.add(initial);
+
+        while (!open.isEmpty()) {
+            State current = open.poll();
+
+            if (visited.contains(current)) continue;
+            visited.add(current);
+
+            if (current.isGoal()) {
+                System.out.println("Solution found:");
+                current.printPath();
+                return;
+            }
+
+            for (State next : current.generateSuccessors()) {
+                if (!visited.contains(next)) {
+                    open.add(next);
+                }
+            }
+        }
+
+        System.out.println("No solution found.");
+    }
+}
