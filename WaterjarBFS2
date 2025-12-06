@@ -1,0 +1,68 @@
+import java.util.*;
+
+class State {
+    int jar1, jar2;
+    String move;
+    State parent;
+
+    State(int jar1, int jar2, String move, State parent) {
+        this.jar1 = jar1;
+        this.jar2 = jar2;
+        this.move = move;
+        this.parent = parent;
+    }
+
+    void printPath() {
+        if (parent != null) parent.printPath();
+        if (move != null) System.out.println(move + " => (" + jar1 + "," + jar2 + ")");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof State)) return false;
+        State s = (State)o;
+        return jar1 == s.jar1 && jar2 == s.jar2;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(jar1, jar2);
+    }
+}
+
+public class Main {
+    static int J1 = 3, J2 = 4, GOAL = 2;
+
+    public static void main(String[] args) {
+        Queue<State> q = new LinkedList<>();
+        Set<State> visited = new HashSet<>();
+
+        q.add(new State(0, 0, null, null));
+
+        while(!q.isEmpty()) {
+            State curr = q.poll();
+            if(visited.contains(curr)) continue;
+            visited.add(curr);
+
+            if(curr.jar1 == GOAL || curr.jar2 == GOAL) {
+                System.out.println("Solution Found:");
+                curr.printPath();
+                return;
+            }
+
+            // All possible moves
+            q.add(new State(J1, curr.jar2, "Fill Jar1", curr));
+            q.add(new State(curr.jar1, J2, "Fill Jar2", curr));
+            q.add(new State(0, curr.jar2, "Empty Jar1", curr));
+            q.add(new State(curr.jar1, 0, "Empty Jar2", curr));
+
+            int pour12 = Math.min(curr.jar1, J2 - curr.jar2);
+            q.add(new State(curr.jar1 - pour12, curr.jar2 + pour12, "Pour Jar1->Jar2", curr));
+
+            int pour21 = Math.min(curr.jar2, J1 - curr.jar1);
+            q.add(new State(curr.jar1 + pour21, curr.jar2 - pour21, "Pour Jar2->Jar1", curr));
+        }
+
+        System.out.println("No solution found.");
+    }
+}
