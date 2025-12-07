@@ -1,0 +1,128 @@
+import java.util.*;
+
+public class Main {
+
+    static int[][] goal = {
+        {1, 2, 3},
+        {8, 0, 4},
+        {7, 6, 5}
+    };
+
+    // Find blank tile
+    static int[] findBlank(int[][] state) {
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                if (state[i][j] == 0) return new int[]{i, j};
+        return new int[]{-1, -1};
+    }
+
+    // Get neighbors (all valid moves)
+    static List<int[][]> getNeighbors(int[][] state) {
+        List<int[][]> neighbors = new ArrayList<>();
+        int[] blank = findBlank(state);
+        int x = blank[0], y = blank[1];
+        int[][] moves = {{-1,0},{1,0},{0,-1},{0,1}}; // up, down, left, right
+
+        for (int[] move : moves) {
+            int nx = x + move[0], ny = y + move[1];
+            if (nx >= 0 && nx < 3 && ny >= 0 && ny < 3) {
+                int[][] newState = copyState(state);
+                int temp = newState[x][y];
+                newState[x][y] = newState[nx][ny];
+                newState[nx][ny] = temp;
+                neighbors.add(newState);
+            }
+        }
+        return neighbors;
+    }
+
+    // Convert state to string for visited set / maps
+    static String stateToString(int[][] state) {
+        StringBuilder sb = new StringBuilder();
+        for (int[] row : state)
+            for (int val : row) sb.append(val);
+        return sb.toString();
+    }
+
+    // Copy state
+    static int[][] copyState(int[][] state) {
+        int[][] newState = new int[3][3];
+        for (int i = 0; i < 3; i++)
+            newState[i] = state[i].clone();
+        return newState;
+    }
+
+    // ---------- DFS function (iterative, with parent map) ----------
+    static List<int[][]> dfs(int[][] start) {
+        Deque<int[][]> stack = new ArrayDeque<>();
+        Set<String> visited = new HashSet<>();
+
+        // To reconstruct the path: store parent relationships using keys
+        Map<String, String> parentKey = new HashMap<>();
+        Map<String, int[][]> stateMap = new HashMap<>();
+
+        String startKey = stateToString(start);
+        stack.push(start);
+        visited.add(startKey);
+        parentKey.put(startKey, null);
+        stateMap.put(startKey, start);
+
+        while (!stack.isEmpty()) {
+            int[][] currState = stack.pop();
+            String currKey = stateToString(currState);
+
+            if (Arrays.deepEquals(currState, goal)) {
+                // Reconstruct path from goal back to start
+                List<int[][]> path = new ArrayList<>();
+                String key = currKey;
+                while (key != null) {
+                    path.add(0, stateMap.get(key)); // add at front
+                    key = parentKey.get(key);
+                }
+                return path;
+            }
+
+            for (int[][] neighbor : getNeighbors(currState)) {
+                String nKey = stateToString(neighbor);
+                if (!visited.contains(nKey)) {
+                    visited.add(nKey);
+                    parentKey.put(nKey, currKey);
+                    stateMap.put(nKey, neighbor);
+                    stack.push(neighbor); // DFS: use stack
+                }
+            }
+        }
+
+        return new ArrayList<>(); // no solution
+    }
+
+    // Print state
+    static void printState(int[][] state) {
+        for (int[] row : state) {
+            for (int val : row)
+                System.out.print((val==0?"_":val) + " ");
+            System.out.println();
+        }
+    }
+
+    public static void main(String[] args) {
+        int[][] start = {
+            {2, 8, 3},
+            {1, 6, 4},
+            {7, 0, 5}
+        };
+
+        // use dfs instead of bfs
+        List<int[][]> solution = dfs(start);
+
+        if (!solution.isEmpty()) {
+            System.out.println("Solved by DFS in " + (solution.size()-1) + " moves");
+            for (int[][] step : solution) {
+                printState(step);
+                System.out.println();
+            }
+        } else {
+            System.out.println("No solution found by DFS");
+        }
+    }
+}
