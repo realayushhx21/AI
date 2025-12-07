@@ -9,7 +9,8 @@ public class Main {
         State(int A, int B, int goal) {
             this.A = A;
             this.B = B;
-            this.h = Math.abs(A - goal);
+            this.h = Math.min(Math.abs(A - goal), Math.abs(B - goal));
+
         }
 
         public String toString() {
@@ -19,7 +20,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        int capA = 4, capB = 3, goal = 2;
+        int capA = 4, capB = 3, goal = 1;
 
         PriorityQueue<State> pq = new PriorityQueue<>(Comparator.comparingInt(s -> s.h));
         HashSet<String> visited = new HashSet<>();
