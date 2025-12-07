@@ -23,26 +23,27 @@ feature(neutral, unsure).
 ask(Feature) :-
     format('Do you feel ~w? (yes/no): ', [Feature]),
     read(Response),
-    (Response == yes -> assertz(has(Feature)) ; true).
+    (Response == yes -> assert(has(Feature)) ; true).
 
-% ---- Count how many features of each Sentiment the user has ----
-count_features(Sentiment, Count) :-
-    findall(F, (feature(Sentiment, F), has(F)), L),
-    length(L, Count).
+% ---- Check if all features of sentiment are present ----
+has_all_features(Sentiment) :-
+    feature(Sentiment, Feature),
+    \+ has(Feature),
+    !, fail.
+has_all_features(_).
 
-% ---- Decide overall sentiment based on counts ----
+% ---- Identify sentiment ----
 analyze(Sentiment) :-
-    count_features(positive, P),
-    count_features(negative, N),
-    (   P > N, P > 0 -> Sentiment = positive
-    ;   N > P, N > 0 -> Sentiment = negative
-    ;   Sentiment = neutral).
+    feature(Sentiment, _),
+    has_all_features(Sentiment).
 
 % ---- Start the Expert System ----
 start :-
     retractall(has(_)),  % clear previous responses
     write('--- Sentiment Analysis Expert System ---'), nl,
     write('Answer the following questions with yes. or no.'), nl,
-    forall(feature(_, F), ask(F)),
-    analyze(S),
-    format('Your sentiment appears to be ~w.~n', [S]).
+    forall(feature(_, F), (ask(F))),
+    (analyze(S) ->
+        format('Your sentiment appears to be ~w.~n', [S])
+    ;
+        write('No clear sentiment identified based on your responses.'), nl).
