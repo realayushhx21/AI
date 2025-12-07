@@ -1,0 +1,48 @@
+:- dynamic has/1.   % Allow adding/removing facts during runtime
+
+% ---- Knowledge Base ----
+feature(positive, happy).
+feature(positive, joyful).
+feature(positive, excited).
+feature(positive, wonderful).
+feature(positive, pleasant).
+
+feature(negative, sad).
+feature(negative, angry).
+feature(negative, terrible).
+feature(negative, horrible).
+feature(negative, disappointed).
+
+feature(neutral, okay).
+feature(neutral, average).
+feature(neutral, fine).
+feature(neutral, normal).
+feature(neutral, unsure).
+
+% ---- Ask user about emotion words ----
+ask(Feature) :-
+    format('Do you feel ~w? (yes/no): ', [Feature]),
+    read(Response),
+    (Response == yes -> assertz(has(Feature)) ; true).
+
+% ---- Count how many features of each Sentiment the user has ----
+count_features(Sentiment, Count) :-
+    findall(F, (feature(Sentiment, F), has(F)), L),
+    length(L, Count).
+
+% ---- Decide overall sentiment based on counts ----
+analyze(Sentiment) :-
+    count_features(positive, P),
+    count_features(negative, N),
+    (   P > N, P > 0 -> Sentiment = positive
+    ;   N > P, N > 0 -> Sentiment = negative
+    ;   Sentiment = neutral).
+
+% ---- Start the Expert System ----
+start :-
+    retractall(has(_)),  % clear previous responses
+    write('--- Sentiment Analysis Expert System ---'), nl,
+    write('Answer the following questions with yes. or no.'), nl,
+    forall(feature(_, F), ask(F)),
+    analyze(S),
+    format('Your sentiment appears to be ~w.~n', [S]).
