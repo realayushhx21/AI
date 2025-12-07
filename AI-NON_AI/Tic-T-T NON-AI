@@ -1,0 +1,115 @@
+import java.util.*;
+
+public class Main {
+
+    public static void displayBoard(int[] board) {
+        for (int i = 0; i < 9; i++) {
+            switch (board[i]) {
+                case 2 -> System.out.print("   ");
+                case 3 -> System.out.print(" X ");
+                case 5 -> System.out.print(" O ");
+            }
+
+            if (i % 3 != 2) {
+                System.out.print("|");
+            } else if (i != 8) {
+                System.out.println("\n---+---+---");
+            }
+        }
+    }
+
+    public static boolean playMove(int[] board, int pos, int turn) {
+        if (board[pos] == 2) {
+            board[pos] = (turn % 2 == 0) ? 5 : 3;
+            return true;
+        } else {
+            System.out.println("Invalid move");
+            return false;
+        }
+    }
+
+    public static int checkWinner(int[] board) {
+        int[][] winPatterns = {
+            {0, 1, 2}, {3, 4, 5}, {6, 7, 8},
+            {0, 3, 6}, {1, 4, 7}, {2, 5, 8},
+            {0, 4, 8}, {2, 4, 6}
+        };
+
+        for (int[] pattern : winPatterns) {
+            int a = pattern[0], b = pattern[1], c = pattern[2];
+            int product = board[a] * board[b] * board[c];
+
+            if (product == 27) return 3; // X wins
+            if (product == 125) return 5; // O wins
+        }
+        return 0; // No winner
+    }
+
+   public static int possibleWinMove(int[] board, int playerVal) {
+    int[][] winPatterns = {
+        {0, 1, 2}, {3, 4, 5}, {6, 7, 8},
+        {0, 3, 6}, {1, 4, 7}, {2, 5, 8},
+        {0, 4, 8}, {2, 4, 6}
+    };
+
+    int targetProduct = (playerVal == 3) ? 18 : 50; 
+   
+    for (int[] pattern : winPatterns) {
+        int a = pattern[0], b = pattern[1], c = pattern[2];
+        int product = board[a] * board[b] * board[c];
+
+        if (product == targetProduct) {
+           
+            if (board[a] == 2) return a;
+            if (board[b] == 2) return b;
+            if (board[c] == 2) return c;
+        }
+    }
+    return -1; 
+}
+
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int[] board = new int[9];
+        Arrays.fill(board, 2); // 2 means empty
+        int turn = 1, winner = 0;
+
+        displayBoard(board);
+        System.out.println();
+
+        while (turn <= 9) {
+            if (turn % 2 == 1) { // Player turn
+                System.out.print("\nEnter your position (0 to 8): ");
+                int pos = sc.nextInt();
+                if (playMove(board, pos, turn)) {
+                    displayBoard(board);
+                    winner = checkWinner(board);
+                    if (winner != 0) break;
+                    turn++;
+                }
+            } else { // Computer turn
+                System.out.println("\nComputer's Turn:");
+                int move = possibleWinMove(board, 5); // Try to win
+                if (move == -1) move = possibleWinMove(board, 3); // Try to block player
+                if (move == -1) {
+                    for (int i = 0; i < 9; i++) {
+                        if (board[i] == 2) {
+                            move = i;
+                            break;
+                        }
+                    }
+                }
+                playMove(board, move, turn);
+                displayBoard(board);
+                winner = checkWinner(board);
+                if (winner != 0) break;
+                turn++;
+            }
+        }
+
+        if (winner == 3) System.out.println("\nPlayer (X) Wins!");
+        else if (winner == 5) System.out.println("\nComputer (O) Wins!");
+        else System.out.println("\nIt's a Draw!");
+    }
+}
