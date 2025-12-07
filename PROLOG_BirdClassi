@@ -1,0 +1,62 @@
+/* ---------- FACTS ---------- */
+
+/* Animals with feathers */
+has_feathers(sparrow).
+has_feathers(eagle).
+has_feathers(penguin).
+has_feathers(ostrich).
+
+/* Animals that lay eggs (grouped together to avoid warnings) */
+lays_eggs(sparrow).
+lays_eggs(eagle).
+lays_eggs(penguin).
+lays_eggs(ostrich).
+lays_eggs(fish).
+
+/* Mammal properties */
+has_hair(bat).
+gives_milk(bat).
+
+/* Fish property */
+lives_in_water(fish).
+
+
+/* ---------- MAIN CLASSIFICATION RULES ---------- */
+
+/* Bird Rule */
+bird(X) :-
+    has_feathers(X),
+    lays_eggs(X).
+
+/* Mammal Rule */
+mammal(X) :-
+    has_hair(X),
+    gives_milk(X).
+
+/* Fish Rule */
+fish_animal(X) :-
+    lives_in_water(X),
+    lays_eggs(X).
+
+
+/* ---------- SUB-CLASSIFICATION OF BIRDS ---------- */
+
+can_fly(sparrow).
+can_fly(eagle).
+
+flightless(penguin).
+flightless(ostrich).
+
+swims(penguin).
+
+flying_bird(X) :-
+    bird(X),
+    can_fly(X).
+
+flightless_bird(X) :-
+    bird(X),
+    flightless(X).
+
+water_bird(X) :-
+    bird(X),
+    swims(X).
