@@ -1,0 +1,146 @@
+import java.util.Scanner;
+
+public class Main {
+
+    static final int EMPTY = 2;
+    static final int PLAYER_X = 3;
+    static final int PLAYER_O = 5;
+    static final int[] magic = {8, 3, 4, 1, 5, 9, 6, 7, 2};
+
+    static int[] board = {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY};
+    static int turn = 1;
+
+    public static void displayBoard() {
+        System.out.println("\nCurrent Board:");
+        System.out.println("-------------");
+        
+        for (int i = 0; i < 9; i++) {
+            switch (board[i]) {
+                case EMPTY -> System.out.print("|   ");
+                case PLAYER_X -> System.out.print("| X ");
+                case PLAYER_O -> System.out.print("| O ");
+            }
+
+            if (i % 3 == 2) {
+                System.out.println("|");
+                System.out.println("-------------");
+            }
+        }
+        System.out.println();
+    }
+
+    public static int checkWinner() {
+        for (int i = 0; i < 9; i++) {
+            for (int j = i + 1; j < 9; j++) {
+                for (int k = j + 1; k < 9; k++) {
+                    if (magic[i] + magic[j] + magic[k] == 15) {
+                        if (board[i] == PLAYER_X && board[j] == PLAYER_X && board[k] == PLAYER_X) {
+                            displayBoard();
+                            System.out.println("🎉 Player X wins!");
+                            return PLAYER_X;
+                        }
+                        if (board[i] == PLAYER_O && board[j] == PLAYER_O && board[k] == PLAYER_O) {
+                            displayBoard();
+                            System.out.println("🤖 Computer (O) wins!");
+                            return PLAYER_O;
+                        }
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+    public static void placeMark(int pos) {
+        board[pos] = (turn % 2 == 0) ? PLAYER_O : PLAYER_X;
+        turn++;
+    }
+
+    public static int findWinningMove(int player) {
+        for (int i = 0; i < 9; i++) {
+            for (int j = i + 1; j < 9; j++) {
+                for (int k = j + 1; k < 9; k++) {
+                    int count = 0;
+                    if (board[i] == player) count++;
+                    if (board[j] == player) count++;
+                    if (board[k] == player) count++;
+
+                    if (count == 2 && magic[i] + magic[j] + magic[k] == 15) {
+                        if (board[i] == EMPTY) return i;
+                        if (board[j] == EMPTY) return j;
+                        if (board[k] == EMPTY) return k;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    public static int chooseFallbackMove() {
+        if (board[4] == EMPTY) return 4; // center first
+        for (int i : new int[]{0, 2, 6, 8}) {
+            if (board[i] == EMPTY) return i; // corners next
+        }
+        for (int i = 0; i < 9; i++) {
+            if (board[i] == EMPTY) return i;
+        }
+        return -1;
+    }
+
+    public static void botPlay() {
+        int move;
+
+        if (turn == 1) move = 0;
+        else if (turn == 2) move = (board[4] == EMPTY) ? 4 : 0;
+        else if (turn == 3) move = (board[8] == EMPTY) ? 8 : 2;
+        else {
+            move = findWinningMove(PLAYER_O);
+            if (move == -1) move = findWinningMove(PLAYER_X);
+            if (move == -1) move = chooseFallbackMove();
+        }
+
+        placeMark(move);
+        System.out.println("\n Computer placed at: " + move);
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        
+        System.out.println("=== Magic Square Tic Tac Toe ===");
+        System.out.println("Positions:");
+        System.out.println(" 0 | 1 | 2");
+        System.out.println("---+---+---");
+        System.out.println(" 3 | 4 | 5");
+        System.out.println("---+---+---");
+        System.out.println(" 6 | 7 | 8");
+
+        System.out.print("\nChoose your symbol (X/O): ");
+        char playerChoice = sc.next().toUpperCase().charAt(0);
+
+        System.out.println("\nYou chose: " + playerChoice);
+        System.out.println("Computer will be: " + (playerChoice == 'X' ? "O" : "X"));
+        
+        displayBoard();
+
+        while (turn <= 9) {
+            if ((playerChoice == 'X' && turn % 2 != 0) || (playerChoice == 'O' && turn % 2 == 0)) {
+                System.out.print("Enter your move (0-8): ");
+                int pos = sc.nextInt();
+
+                if (pos < 0 || pos > 8 || board[pos] != EMPTY) {
+                    System.out.println("Invalid move — Try again.");
+                    continue;
+                }
+
+                placeMark(pos);
+            } else {
+                botPlay();
+            }
+
+            displayBoard();
+            if (checkWinner() != 0) return;
+        }
+
+        System.out.println("\n It's a draw!");
+    }
+}
