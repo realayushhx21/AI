@@ -1,0 +1,234 @@
+import java.util.Scanner;
+
+public class Main {
+
+    static char[][] board = new char[3][3];
+    static final char EMPTY = ' ';
+    static final char HUMAN = 'X';
+    static final char AI    = 'O';
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int choice;
+
+        while (true) {
+            System.out.println("\n=== Tic-Tac-Toe ===");
+            System.out.println("1. Non-AI: Human vs Human");
+            System.out.println("2. AI: Human vs Computer (Minimax)");
+            System.out.println("3. Exit");
+            System.out.print("Enter your choice: ");
+            choice = sc.nextInt();
+
+            if (choice == 1) {
+                resetBoard();
+                playHumanVsHuman(sc);
+            } else if (choice == 2) {
+                resetBoard();
+                playHumanVsAI(sc);
+            } else if (choice == 3) {
+                System.out.println("Goodbye!");
+                break;
+            } else {
+                System.out.println("Invalid choice. Try again.");
+            }
+        }
+
+        sc.close();
+    }
+
+    // ---------------- Common Helpers ----------------
+
+    static void resetBoard() {
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                board[i][j] = EMPTY;
+    }
+
+    static void printBoard() {
+        System.out.println("-------------");
+        for (int i = 0; i < 3; i++) {
+            System.out.print("| ");
+            for (int j = 0; j < 3; j++) {
+                System.out.print(board[i][j] + " | ");
+            }
+            System.out.println();
+            System.out.println("-------------");
+        }
+    }
+
+    // returns 'X', 'O', 'D' (draw), or ' ' (ongoing)
+    static char checkWinner() {
+        // Rows & Columns
+        for (int i = 0; i < 3; i++) {
+            if (board[i][0] != EMPTY &&
+                board[i][0] == board[i][1] &&
+                board[i][1] == board[i][2])
+                return board[i][0];
+
+            if (board[0][i] != EMPTY &&
+                board[0][i] == board[1][i] &&
+                board[1][i] == board[2][i])
+                return board[0][i];
+        }
+
+        // Diagonals
+        if (board[0][0] != EMPTY &&
+            board[0][0] == board[1][1] &&
+            board[1][1] == board[2][2])
+            return board[0][0];
+
+        if (board[0][2] != EMPTY &&
+            board[0][2] == board[1][1] &&
+            board[1][1] == board[2][0])
+            return board[0][2];
+
+        // Check draw
+        boolean emptyFound = false;
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                if (board[i][j] == EMPTY)
+                    emptyFound = true;
+
+        if (!emptyFound) return 'D'; // Draw
+        return ' '; // Game not finished
+    }
+
+    static boolean isGameOver() {
+        char result = checkWinner();
+        if (result == ' ') return false;
+
+        printBoard();
+        if (result == 'D')
+            System.out.println("It's a draw!");
+        else
+            System.out.println("Winner: " + result);
+        return true;
+    }
+
+    // ---------------- Case 1: Non-AI (Human vs Human) ----------------
+
+    static void playHumanVsHuman(Scanner sc) {
+        char currentPlayer = 'X';
+        System.out.println("\nNon-AI: Human vs Human");
+        printBoard();
+        while (true) {
+            System.out.println("Player " + currentPlayer + " turn.");
+            int row = getInput(sc, "Enter row (0-2): ");
+            int col = getInput(sc, "Enter col (0-2): ");
+
+            if (isValidMove(row, col)) {
+                board[row][col] = currentPlayer;
+                printBoard();
+                if (isGameOver()) break;
+                currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+            } else {
+                System.out.println("Invalid move, try again.");
+            }
+        }
+    }
+
+    // ---------------- Case 2: AI (Human vs Computer, Minimax) ----------------
+
+    static void playHumanVsAI(Scanner sc) {
+        System.out.println("\nAI: Human (X) vs Computer (O)");
+        printBoard();
+        while (true) {
+            // Human move
+            System.out.println("Your turn (X).");
+            int row = getInput(sc, "Enter row (0-2): ");
+            int col = getInput(sc, "Enter col (0-2): ");
+
+            if (!isValidMove(row, col)) {
+                System.out.println("Invalid move, try again.");
+                continue;
+            }
+            board[row][col] = HUMAN;
+            printBoard();
+            if (isGameOver()) break;
+
+            // AI move
+            System.out.println("Computer's turn (O)...");
+            int[] best = findBestMove();
+            board[best[0]][best[1]] = AI;
+            printBoard();
+            if (isGameOver()) break;
+        }
+    }
+
+    // -------- Input & Move Validity --------
+
+    static int getInput(Scanner sc, String msg) {
+        System.out.print(msg);
+        while (!sc.hasNextInt()) {
+            System.out.print("Please enter a number: ");
+            sc.next();
+        }
+        return sc.nextInt();
+    }
+
+    static boolean isValidMove(int row, int col) {
+        return row >= 0 && row < 3 &&
+               col >= 0 && col < 3 &&
+               board[row][col] == EMPTY;
+    }
+
+    // ---------------- Minimax AI ----------------
+
+    static int minimax(boolean isMaximizing) {
+        char result = checkWinner();
+        if (result != ' ') {
+            if (result == HUMAN) return -1;
+            if (result == AI)    return 1;
+            return 0; // draw
+        }
+
+        if (isMaximizing) {
+            int bestScore = Integer.MIN_VALUE;
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (board[i][j] == EMPTY) {
+                        board[i][j] = AI;
+                        int score = minimax(false);
+                        board[i][j] = EMPTY;
+                        bestScore = Math.max(bestScore, score);
+                    }
+                }
+            }
+            return bestScore;
+        } else {
+            int bestScore = Integer.MAX_VALUE;
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (board[i][j] == EMPTY) {
+                        board[i][j] = HUMAN;
+                        int score = minimax(true);
+                        board[i][j] = EMPTY;
+                        bestScore = Math.min(bestScore, score);
+                    }
+                }
+            }
+            return bestScore;
+        }
+    }
+
+    static int[] findBestMove() {
+        int bestScore = Integer.MIN_VALUE;
+        int bestRow = -1, bestCol = -1;
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (board[i][j] == EMPTY) {
+                    board[i][j] = AI;
+                    int score = minimax(false);
+                    board[i][j] = EMPTY;
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestRow = i;
+                        bestCol = j;
+                    }
+                }
+            }
+        }
+        return new int[]{bestRow, bestCol};
+    }
+}
