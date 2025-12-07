@@ -3,7 +3,7 @@ import java.util.*;
 public class Main {
 
     static int A, B, T;
-    static final int MAX_DEPTH = 8;   // depth limit
+    static final int MAX_DEPTH = 8;   // depth limit hi
 
     static class State {
         int x, y;
