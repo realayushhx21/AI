@@ -1,0 +1,72 @@
+/* ----------- FACTS ----------- */
+
+/* Type of movement */
+moves_on_land(car).
+moves_on_land(bike).
+moves_on_land(bus).
+moves_on_land(train).
+
+moves_on_water(ship).
+moves_on_water(boat).
+
+moves_in_air(airplane).
+moves_in_air(helicopter).
+
+
+/* Engine type */
+has_engine(car).
+has_engine(bus).
+has_engine(train).
+has_engine(airplane).
+has_engine(helicopter).
+has_engine(ship).
+
+/* Non-engine vehicles */
+manual(bike).
+manual(boat).
+
+
+/* Number of wheels (only for land vehicles) */
+wheels(car, 4).
+wheels(bus, 6).
+wheels(bike, 2).
+wheels(train, many).
+
+
+/* ----------- CLASSIFICATION RULES ----------- */
+
+/* A vehicle is anything that moves on land/water/air */
+vehicle(X) :-
+    moves_on_land(X);
+    moves_on_water(X);
+    moves_in_air(X).
+
+/* Motor vehicle = vehicle with engine */
+motor_vehicle(X) :-
+    vehicle(X),
+    has_engine(X).
+
+/* Non-motor (manual) vehicle */
+non_motor_vehicle(X) :-
+    vehicle(X),
+    manual(X).
+
+/* Land vehicle classification */
+land_vehicle(X) :-
+    moves_on_land(X).
+
+two_wheeler(X) :-
+    land_vehicle(X),
+    wheels(X, 2).
+
+four_wheeler(X) :-
+    land_vehicle(X),
+    wheels(X, 4).
+
+/* Water vehicle */
+water_vehicle(X) :-
+    moves_on_water(X).
+
+/* Air vehicle */
+air_vehicle(X) :-
+    moves_in_air(X).
