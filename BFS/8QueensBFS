@@ -1,0 +1,68 @@
+import java.util.*;
+
+class QueenState {
+    int[] positions; // positions[i] = column of queen in row i
+    int row;         // current row to place queen
+    QueenState parent;
+
+    QueenState(int[] positions, int row, QueenState parent) {
+        this.positions = positions.clone();
+        this.row = row;
+        this.parent = parent;
+    }
+
+    // Print the chessboard
+    void printBoard() {
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (i < row && positions[i] == j) System.out.print("Q ");
+                else System.out.print(". ");
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
+    // Print the path (sequence of placements)
+    void printPath() {
+        if (parent != null) parent.printPath();
+        printBoard();
+    }
+}
+
+public class BFS_8Queens {
+
+    // Check if placing queen at (row, col) is safe
+    static boolean isSafe(int[] positions, int row, int col) {
+        for (int i = 0; i < row; i++) {
+            int prevCol = positions[i];
+            if (prevCol == col || Math.abs(prevCol - col) == Math.abs(i - row)) return false;
+        }
+        return true;
+    }
+
+    public static void main(String[] args) {
+        Queue<QueenState> queue = new LinkedList<>();
+        queue.add(new QueenState(new int[8], 0, null)); // start with empty board
+
+        while (!queue.isEmpty()) {
+            QueenState curr = queue.poll();
+
+            if (curr.row == 8) { // all queens placed
+                System.out.println("Solution found:");
+                curr.printPath();
+                return;
+            }
+
+            for (int col = 0; col < 8; col++) {
+                if (isSafe(curr.positions, curr.row, col)) {
+                    int[] newPos = curr.positions.clone();
+                    newPos[curr.row] = col;
+                    queue.add(new QueenState(newPos, curr.row + 1, curr));
+                }
+            }
+        }
+
+        System.out.println("No solution found.");
+    }
+}

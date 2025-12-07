@@ -1,0 +1,100 @@
+import java.util.*;
+
+class State {
+    int x;  // Current water in Jar X
+    int y;  // Current water in Jar Y
+    State parent; 
+
+    State(int x, int y, State parent) {
+        this.x = x;
+        this.y = y;
+        this.parent = parent;
+    }
+
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ")";
+    }
+}
+
+public class Main{
+
+    static void bfs(int capX, int capY, int goal) {
+        Queue<State> queue = new LinkedList<>();
+        Set<String> visited = new HashSet<>();
+
+        State start = new State(0, 0, null);
+        queue.add(start);
+
+        while (!queue.isEmpty()) {
+            State current = queue.poll();
+
+            // Goal Check
+            if (current.x == goal || current.y == goal) {
+                printSolution(current);
+                return;
+            }
+
+            String key = current.x + "," + current.y;
+            if (visited.contains(key))
+                continue;
+
+            visited.add(key);
+
+            // Generate all possible valid moves:
+
+            // 1. Fill Jar X
+            queue.add(new State(capX, current.y, current));
+
+            // 2. Fill Jar Y
+            queue.add(new State(current.x, capY, current));
+
+            // 3. Empty Jar X
+            queue.add(new State(0, current.y, current));
+
+            // 4. Empty Jar Y
+            queue.add(new State(current.x, 0, current));
+
+            // 5. Pour X → Y
+            int pourXY = Math.min(current.x, capY - current.y);
+            queue.add(new State(current.x - pourXY, current.y + pourXY, current));
+
+            // 6. Pour Y → X
+            int pourYX = Math.min(current.y, capX - current.x);
+            queue.add(new State(current.x + pourYX, current.y - pourYX, current));
+        }
+
+        System.out.println("No solution found.");
+    }
+
+    static void printSolution(State goalState) {
+        System.out.println("\nSolution Path:");
+        List<State> path = new ArrayList<>();
+
+        while (goalState != null) {
+            path.add(goalState);
+            goalState = goalState.parent;
+        }
+
+        Collections.reverse(path);
+
+        for (State s : path) {
+            System.out.println(s);
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter capacity of Jar X: ");
+        int capX = sc.nextInt();
+
+        System.out.print("Enter capacity of Jar Y: ");
+        int capY = sc.nextInt();
+
+        System.out.print("Enter goal amount: ");
+        int goal = sc.nextInt();
+
+        bfs(capX, capY, goal);
+    }
+}

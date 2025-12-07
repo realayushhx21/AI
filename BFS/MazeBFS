@@ -1,0 +1,72 @@
+import java.util.*;
+
+class MazeState {
+    int x, y;
+    MazeState parent;
+
+    MazeState(int x, int y, MazeState parent) {
+        this.x = x;
+        this.y = y;
+        this.parent = parent;
+    }
+
+    void printPath() {
+        if (parent != null) parent.printPath();
+        System.out.println("(" + x + "," + y + ")");
+    }
+}
+
+public class Main {
+
+    // Maze definition (0 = path, 1 = wall)
+    static int[][] maze = {
+        {0, 1, 0, 0, 0},
+        {0, 1, 0, 1, 0},
+        {0, 0, 0, 1, 0},
+        {1, 1, 0, 1, 0},
+        {0, 0, 0, 0, 0}
+    };
+
+    static int rows = maze.length;
+    static int cols = maze[0].length;
+
+    // Moves: up, down, left, right
+    static int[][] moves = {{-1,0},{1,0},{0,-1},{0,1}};
+
+    public static void main(String[] args) {
+        int startX = 0, startY = 0;
+        int goalX = 4, goalY = 4;
+
+        Queue<MazeState> queue = new LinkedList<>();
+        boolean[][] visited = new boolean[rows][cols];
+
+        queue.add(new MazeState(startX, startY, null));
+
+        while (!queue.isEmpty()) {
+            MazeState curr = queue.poll();
+
+            if (visited[curr.x][curr.y]) continue;
+            visited[curr.x][curr.y] = true;
+
+            // Check goal
+            if (curr.x == goalX && curr.y == goalY) {
+                System.out.println("Path to goal:");
+                curr.printPath();
+                return;
+            }
+
+            // Explore neighbors
+            for (int[] move : moves) {
+                int nx = curr.x + move[0];
+                int ny = curr.y + move[1];
+
+                if (nx >= 0 && nx < rows && ny >= 0 && ny < cols &&
+                    maze[nx][ny] == 0 && !visited[nx][ny]) {
+                    queue.add(new MazeState(nx, ny, curr));
+                }
+            }
+        }
+
+        System.out.println("No path found.");
+    }
+}
