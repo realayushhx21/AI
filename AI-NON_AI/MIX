@@ -1,11 +1,12 @@
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
 
+    // ---------- Minimax board (for Option 2) ----------
     static char[][] board = new char[3][3];
     static final char EMPTY = ' ';
-    static final char HUMAN = 'X';
-    static final char AI    = 'O';
+    static final char HUMAN = 'X'; // Player
+    static final char AI    = 'O'; // Computer
 
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
@@ -13,15 +14,18 @@ public class Main {
 
         while (true) {
             System.out.println("\n=== Tic-Tac-Toe ===");
-            System.out.println("1. Non-AI: Human vs Human");
+            System.out.println("1. Non-AI: Human vs Computer (possWin: 2,3,5 logic)");
             System.out.println("2. AI: Human vs Computer (Minimax)");
             System.out.println("3. Exit");
             System.out.print("Enter your choice: ");
+            while (!sc.hasNextInt()) {
+                System.out.print("Please enter a number (1-3): ");
+                sc.next();
+            }
             choice = sc.nextInt();
 
             if (choice == 1) {
-                resetBoard();
-                playHumanVsHuman(sc);
+                playNonAIVsComputerPossWin(sc);
             } else if (choice == 2) {
                 resetBoard();
                 playHumanVsAI(sc);
@@ -36,7 +40,7 @@ public class Main {
         sc.close();
     }
 
-    // ---------------- Common Helpers ----------------
+    // ========== COMMON HELPERS FOR MINIMAX VERSION (OPTION 2) ==========
 
     static void resetBoard() {
         for (int i = 0; i < 3; i++)
@@ -45,6 +49,7 @@ public class Main {
     }
 
     static void printBoard() {
+        System.out.println("\nCurrent Board:");
         System.out.println("-------------");
         for (int i = 0; i < 3; i++) {
             System.out.print("| ");
@@ -54,6 +59,7 @@ public class Main {
             System.out.println();
             System.out.println("-------------");
         }
+        System.out.println();
     }
 
     // returns 'X', 'O', 'D' (draw), or ' ' (ongoing)
@@ -105,57 +111,7 @@ public class Main {
         return true;
     }
 
-    // ---------------- Case 1: Non-AI (Human vs Human) ----------------
-
-    static void playHumanVsHuman(Scanner sc) {
-        char currentPlayer = 'X';
-        System.out.println("\nNon-AI: Human vs Human");
-        printBoard();
-        while (true) {
-            System.out.println("Player " + currentPlayer + " turn.");
-            int row = getInput(sc, "Enter row (0-2): ");
-            int col = getInput(sc, "Enter col (0-2): ");
-
-            if (isValidMove(row, col)) {
-                board[row][col] = currentPlayer;
-                printBoard();
-                if (isGameOver()) break;
-                currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
-            } else {
-                System.out.println("Invalid move, try again.");
-            }
-        }
-    }
-
-    // ---------------- Case 2: AI (Human vs Computer, Minimax) ----------------
-
-    static void playHumanVsAI(Scanner sc) {
-        System.out.println("\nAI: Human (X) vs Computer (O)");
-        printBoard();
-        while (true) {
-            // Human move
-            System.out.println("Your turn (X).");
-            int row = getInput(sc, "Enter row (0-2): ");
-            int col = getInput(sc, "Enter col (0-2): ");
-
-            if (!isValidMove(row, col)) {
-                System.out.println("Invalid move, try again.");
-                continue;
-            }
-            board[row][col] = HUMAN;
-            printBoard();
-            if (isGameOver()) break;
-
-            // AI move
-            System.out.println("Computer's turn (O)...");
-            int[] best = findBestMove();
-            board[best[0]][best[1]] = AI;
-            printBoard();
-            if (isGameOver()) break;
-        }
-    }
-
-    // -------- Input & Move Validity --------
+    // -------- Input & Move Validity for Minimax version --------
 
     static int getInput(Scanner sc, String msg) {
         System.out.print(msg);
@@ -172,17 +128,52 @@ public class Main {
                board[row][col] == EMPTY;
     }
 
+    // ---------------- OPTION 2: AI (Human vs Computer, Minimax) ----------------
+
+    static void playHumanVsAI(Scanner sc) {
+        System.out.println("\nAI Mode: Human vs Computer (Minimax)");
+        System.out.println("You are X (Player).");
+        System.out.println("Computer is O (AI).");
+        System.out.println("You (X) always play first.\n");
+
+        resetBoard();
+        printBoard();
+
+        while (true) {
+            // Human move (X)
+            System.out.println("Your turn (X).");
+            int row = getInput(sc, "Enter row (0-2): ");
+            int col = getInput(sc, "Enter col (0-2): ");
+
+            if (!isValidMove(row, col)) {
+                System.out.println("Invalid move, try again.");
+                continue;
+            }
+
+            board[row][col] = HUMAN; // X placed by human
+            printBoard();
+            if (isGameOver()) break;
+
+            // AI move (O)
+            System.out.println("Computer's turn (O)...");
+            int[] best = findBestMove();
+            board[best[0]][best[1]] = AI; // O placed by computer
+            printBoard();
+            if (isGameOver()) break;
+        }
+    }
+
     // ---------------- Minimax AI ----------------
 
     static int minimax(boolean isMaximizing) {
         char result = checkWinner();
         if (result != ' ') {
-            if (result == HUMAN) return -1;
-            if (result == AI)    return 1;
+            if (result == HUMAN) return -1; // Human win
+            if (result == AI)    return 1;  // AI win
             return 0; // draw
         }
 
-        if (isMaximizing) {
+        if (isMaximizing) { // AI (O) tries to maximize
             int bestScore = Integer.MIN_VALUE;
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
@@ -195,7 +186,7 @@ public class Main {
                 }
             }
             return bestScore;
-        } else {
+        } else { // Human (X) tries to minimize
             int bestScore = Integer.MAX_VALUE;
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
@@ -218,8 +209,8 @@ public class Main {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 if (board[i][j] == EMPTY) {
-                    board[i][j] = AI;
-                    int score = minimax(false);
+                    board[i][j] = AI;           // AI tries move O here
+                    int score = minimax(false); // Next is human (minimizing)
                     board[i][j] = EMPTY;
                     if (score > bestScore) {
                         bestScore = score;
@@ -230,5 +221,140 @@ public class Main {
             }
         }
         return new int[]{bestRow, bestCol};
+    }
+
+    // ========== OPTION 1: NON-AI WITH possWin (2,3,5 PRIME LOGIC) ==========
+
+    // Display for int[9] board: 2 = empty, 3 = X, 5 = O
+    public static void displayBoard(int[] b) {
+        System.out.println("\nCurrent Board:");
+        System.out.println("-------------");
+        for (int i = 0; i < 9; i++) {
+            switch (b[i]) {
+                case 2 -> System.out.print("   ");
+                case 3 -> System.out.print(" X ");
+                case 5 -> System.out.print(" O ");
+            }
+
+            if (i % 3 != 2) {
+                System.out.print("|");
+            } else if (i != 8) {
+                System.out.println();
+                System.out.println("---+---+---");
+            }
+        }
+        System.out.println("\n-------------\n");
+    }
+
+    // play move on int[9] board, turn odd = X, even = O
+    public static boolean playMove(int[] b, int pos, int turn) {
+        if (pos < 0 || pos > 8) {
+            System.out.println("Invalid position (0-8 only)");
+            return false;
+        }
+        if (b[pos] == 2) {
+            b[pos] = (turn % 2 == 0) ? 5 : 3; // even turn -> O, odd turn -> X
+            return true;
+        } else {
+            System.out.println("Invalid move (cell already filled)");
+            return false;
+        }
+    }
+
+    // check winner for int[9] board: return 3 (X), 5 (O), or 0 (no winner yet)
+    public static int checkWinner(int[] b) {
+        int[][] winPatterns = {
+            {0, 1, 2}, {3, 4, 5}, {6, 7, 8},
+            {0, 3, 6}, {1, 4, 7}, {2, 5, 8},
+            {0, 4, 8}, {2, 4, 6}
+        };
+
+        for (int[] pattern : winPatterns) {
+            int a = pattern[0], d = pattern[1], c = pattern[2];
+            int product = b[a] * b[d] * b[c];
+
+            if (product == 27) return 3;   // 3*3*3 = 27 → X wins
+            if (product == 125) return 5;  // 5*5*5 = 125 → O wins
+        }
+        return 0; // No winner yet
+    }
+
+    // possWin style function: if playerVal (3 or 5) can win in one move, return that index, else -1
+    public static int possibleWinMove(int[] b, int playerVal) {
+        int[][] winPatterns = {
+            {0, 1, 2}, {3, 4, 5}, {6, 7, 8},
+            {0, 3, 6}, {1, 4, 7}, {2, 5, 8},
+            {0, 4, 8}, {2, 4, 6}
+        };
+
+        // For X (3): 3 * 3 * 2 = 18
+        // For O (5): 5 * 5 * 2 = 50
+        int targetProduct = (playerVal == 3) ? 18 : 50;
+
+        for (int[] pattern : winPatterns) {
+            int a = pattern[0], d = pattern[1], c = pattern[2];
+            int product = b[a] * b[d] * b[c];
+
+            if (product == targetProduct) {
+                if (b[a] == 2) return a;
+                if (b[d] == 2) return d;
+                if (b[c] == 2) return c;
+            }
+        }
+        return -1; 
+    }
+
+    // This method runs the old NonAITicTacToe main logic as Option 1
+    public static void playNonAIVsComputerPossWin(Scanner sc) {
+        int[] b = new int[9];
+        Arrays.fill(b, 2); // 2 means empty
+        int turn = 1, winner = 0;
+
+        System.out.println("\nNon-AI: Human (X) vs Computer (O) using possWin logic (2,3,5)");
+        System.out.println("Board positions:");
+        System.out.println(" 0 | 1 | 2 ");
+        System.out.println("---+---+---");
+        System.out.println(" 3 | 4 | 5 ");
+        System.out.println("---+---+---");
+        System.out.println(" 6 | 7 | 8 ");
+        displayBoard(b);
+
+        while (turn <= 9) {
+            if (turn % 2 == 1) { // Player turn (X)
+                System.out.print("Enter your position (0 to 8): ");
+                while (!sc.hasNextInt()) {
+                    System.out.print("Please enter a number (0-8): ");
+                    sc.next();
+                }
+                int pos = sc.nextInt();
+                if (playMove(b, pos, turn)) {
+                    displayBoard(b);
+                    winner = checkWinner(b);
+                    if (winner != 0) break;
+                    turn++;
+                }
+            } else { // Computer turn (O)
+                System.out.println("Computer's Turn:");
+                int move = possibleWinMove(b, 5); // Try to win as O
+                if (move == -1) move = possibleWinMove(b, 3); // Try to block X
+                if (move == -1) {
+                    for (int i = 0; i < 9; i++) {
+                        if (b[i] == 2) {
+                            move = i;
+                            break;
+                        }
+                    }
+                }
+                playMove(b, move, turn);
+                displayBoard(b);
+                winner = checkWinner(b);
+                if (winner != 0) break;
+                turn++;
+            }
+        }
+
+        if (winner == 3) System.out.println("Player (X) Wins!");
+        else if (winner == 5) System.out.println("Computer (O) Wins!");
+        else System.out.println("It's a Draw!");
     }
 }
