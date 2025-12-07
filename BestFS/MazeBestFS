@@ -1,0 +1,70 @@
+import java.util.*;
+
+public class Main {
+
+    // Maze grid (0 = free, 1 = wall)
+    static int[][] maze = {
+            {0, 0, 1, 0},
+            {0, 0, 0, 0},
+            {1, 0, 1, 0},
+            {0, 0, 0, 0}
+    };
+
+    static int goalX = 3, goalY = 3;
+
+    // Heuristic: Manhattan distance
+    static int h(int x, int y) {
+        return Math.abs(x - goalX) + Math.abs(y - goalY);
+    }
+
+    static class Node {
+        int x, y, h;
+
+        Node(int x, int y) {
+            this.x = x;
+            this.y = y;
+            this.h = h(x, y);
+        }
+
+        public String toString() {
+            return "(" + x + "," + y + ")";
+        }
+    }
+
+    public static void main(String[] args) {
+
+        PriorityQueue<Node> pq = new PriorityQueue<>(Comparator.comparingInt(n -> n.h));
+        boolean[][] visited = new boolean[4][4];
+
+        pq.add(new Node(0, 0)); // start
+
+        int[] dx = {1, -1, 0, 0};
+        int[] dy = {0, 0, 1, -1};
+
+        while (!pq.isEmpty()) {
+
+            Node curr = pq.poll();
+            System.out.println("Visiting: " + curr + "  h=" + curr.h);
+
+            if (curr.x == goalX && curr.y == goalY) {
+                System.out.println("\nGoal Reached at: " + curr);
+                return;
+            }
+
+            if (visited[curr.x][curr.y]) continue;
+            visited[curr.x][curr.y] = true;
+
+            // Try all 4 possible moves
+            for (int i = 0; i < 4; i++) {
+                int nx = curr.x + dx[i];
+                int ny = curr.y + dy[i];
+
+                if (nx >= 0 && ny >= 0 && nx < 4 && ny < 4) {
+                    if (!visited[nx][ny] && maze[nx][ny] == 0) {
+                        pq.add(new Node(nx, ny));
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,70 @@
+import java.util.*;
+
+public class Main {
+
+    static class State {
+        int A, B; // jar amounts
+        int h;    // heuristic
+
+        State(int A, int B, int goal) {
+            this.A = A;
+            this.B = B;
+            this.h = Math.abs(A - goal);
+        }
+
+        public String toString() {
+            return "(" + A + ", " + B + ")";
+        }
+    }
+
+    public static void main(String[] args) {
+
+        int capA = 4, capB = 3, goal = 2;
+
+        PriorityQueue<State> pq = new PriorityQueue<>(Comparator.comparingInt(s -> s.h));
+        HashSet<String> visited = new HashSet<>();
+
+        State start = new State(0, 0, goal);
+        pq.add(start);
+
+        while (!pq.isEmpty()) {
+
+            State curr = pq.poll();
+            System.out.println("Visiting: " + curr + "  h=" + curr.h);
+
+            if (curr.A == goal || curr.B == goal) {
+                System.out.println("\nGoal reached: " + curr);
+                return;
+            }
+
+            String key = curr.A + "," + curr.B;
+            if (visited.contains(key)) continue;
+            visited.add(key);
+
+            // Generate all possible next moves
+            ArrayList<State> next = new ArrayList<>();
+
+            // 1. Fill A
+            next.add(new State(capA, curr.B, goal));
+            // 2. Fill B
+            next.add(new State(curr.A, capB, goal));
+            // 3. Empty A
+            next.add(new State(0, curr.B, goal));
+            // 4. Empty B
+            next.add(new State(curr.A, 0, goal));
+            // 5. Pour A → B
+            int pourAB = Math.min(curr.A, capB - curr.B);
+            next.add(new State(curr.A - pourAB, curr.B + pourAB, goal));
+            // 6. Pour B → A
+            int pourBA = Math.min(curr.B, capA - curr.A);
+            next.add(new State(curr.A + pourBA, curr.B - pourBA, goal));
+
+            // Add to PQ
+            for (State s : next) {
+                String k = s.A + "," + s.B;
+                if (!visited.contains(k))
+                    pq.add(s);
+            }
+        }
+    }
+}
