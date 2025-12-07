@@ -3,19 +3,20 @@ import java.util.*;
 public class Main {
 
     static int A, B, T;
-    static boolean[][] visited;
-    static final int MAX_DEPTH = 4;   // depth limit
+    static final int MAX_DEPTH = 8;   // depth limit
 
     static class State {
         int x, y;
         String action;
-        int depth;   // how deep this state is in the search tree
+        int depth;
+        State parent;   // to reconstruct path
 
-        State(int x, int y, String action, int depth) {
+        State(int x, int y, String action, int depth, State parent) {
             this.x = x;
             this.y = y;
             this.action = action;
             this.depth = depth;
+            this.parent = parent;
         }
 
         String key() {
@@ -33,21 +34,21 @@ public class Main {
         return a;
     }
 
-    // Generate next possible states (without depth, we’ll add it later)
+    // Generate next possible states (depth/parent will be filled when pushing)
     static List<State> getNextStates(State s) {
         List<State> list = new ArrayList<>();
 
-        list.add(new State(A, s.y, "Fill Jug A", 0));
-        list.add(new State(s.x, B, "Fill Jug B", 0));
+        list.add(new State(A, s.y, "Fill Jug A", 0, s));
+        list.add(new State(s.x, B, "Fill Jug B", 0, s));
 
-        list.add(new State(0, s.y, "Empty Jug A", 0));
-        list.add(new State(s.x, 0, "Empty Jug B", 0));
+        list.add(new State(0, s.y, "Empty Jug A", 0, s));
+        list.add(new State(s.x, 0, "Empty Jug B", 0, s));
 
         int transferAB = Math.min(s.x, B - s.y);
-        list.add(new State(s.x - transferAB, s.y + transferAB, "Pour Jug A → Jug B", 0));
+        list.add(new State(s.x - transferAB, s.y + transferAB, "Pour Jug A → Jug B", 0, s));
 
         int transferBA = Math.min(s.y, A - s.x);
-        list.add(new State(s.x + transferBA, s.y - transferBA, "Pour Jug B → Jug A", 0));
+        list.add(new State(s.x + transferBA, s.y - transferBA, "Pour Jug B → Jug A", 0, s));
 
         return list;
     }
@@ -71,41 +72,47 @@ public class Main {
             System.out.println("Still running DLS up to depth " + MAX_DEPTH + "...\n");
         }
 
-        visited = new boolean[A + 1][B + 1];
+        // bestDepth[x][y] = smallest depth at which we've seen state (x,y)
+        int[][] bestDepth = new int[A + 1][B + 1];
+        for (int i = 0; i <= A; i++)
+            Arrays.fill(bestDepth[i], Integer.MAX_VALUE);
 
         Stack<State> stack = new Stack<>();
-        List<State> solutionPath = new ArrayList<>();
 
         // start at (0,0) with depth 0
-        stack.push(new State(0, 0, "Start", 0));
+        State start = new State(0, 0, "Start", 0, null);
+        stack.push(start);
 
         boolean solutionFound = false;
+        State goalState = null;
 
         while (!stack.isEmpty()) {
 
             State curr = stack.pop();
 
-            // skip if already visited at this state
-            if (visited[curr.x][curr.y])
-                continue;
-
             // depth limit check
             if (curr.depth > MAX_DEPTH)
                 continue;
 
-            visited[curr.x][curr.y] = true;
-            solutionPath.add(curr);
+            // If we've already seen this state at a smaller or equal depth, skip
+            if (curr.depth >= bestDepth[curr.x][curr.y])
+                continue;
 
+            // record best (smallest) depth for this state
+            bestDepth[curr.x][curr.y] = curr.depth;
+
+            // goal test
             if (curr.x == T || curr.y == T) {
                 solutionFound = true;
+                goalState = curr;
                 break;
             }
 
+            // expand children
             for (State next : getNextStates(curr)) {
-                if (!visited[next.x][next.y]) {
-                    // push with increased depth
-                    stack.push(new State(next.x, next.y, next.action, curr.depth + 1));
-                }
+                next.depth = curr.depth + 1;
+                // parent is already set in constructor
+                stack.push(next);
             }
         }
 
@@ -114,15 +121,22 @@ public class Main {
             return;
         }
 
-        System.out.println("\nSolution found using DLS (depth ≤ " + MAX_DEPTH + "):");
-        State last = solutionPath.get(solutionPath.size() - 1);
+        // Reconstruct path from goalState back to start
+        List<State> path = new ArrayList<>();
+        State temp = goalState;
+        while (temp != null) {
+            path.add(temp);
+            temp = temp.parent;
+        }
+        Collections.reverse(path);
 
-        for (State st : solutionPath) {
+        System.out.println("\nSolution found using DLS (depth ≤ " + MAX_DEPTH + "):");
+        for (State st : path) {
             System.out.println(st.action + " -> (" + st.x + ", " + st.y + "), depth = " + st.depth);
         }
 
-        System.out.println("\nTotal steps: " + (solutionPath.size() - 1));
-        System.out.println("Final: (" + last.x + ", " + last.y + ") ✔");
+        System.out.println("\nTotal steps: " + (path.size() - 1));
+        System.out.println("Final: (" + goalState.x + ", " + goalState.y + ") ✔");
         System.out.println("Target " + T + " liters achieved (within depth limit)!");
     }
 }
