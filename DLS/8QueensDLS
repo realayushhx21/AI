@@ -12,9 +12,9 @@ class QueenState {
     }
 
     void printBoard() {
-        for (int r = 0; r < depth; r++) {
+        for (int r = 0; r < 8; r++) {  // print full chessboard
             for (int c = 0; c < 8; c++) {
-                if (board[r] == c) System.out.print("Q ");
+                if (r < depth && board[r] == c) System.out.print("Q ");
                 else System.out.print(". ");
             }
             System.out.println();
@@ -30,13 +30,12 @@ class QueenState {
 
 public class Main {
 
-    static int DEPTH_LIMIT = 8; // we allow only 3 queens placed
+    static int DEPTH_LIMIT = 8;
 
-    // Safety check
     static boolean isSafe(int[] board, int row, int col) {
         for (int r = 0; r < row; r++) {
-            if (board[r] == col) return false; // same column
-            if (Math.abs(board[r] - col) == Math.abs(r - row)) return false; // diagonal attack
+            if (board[r] == col) return false;
+            if (Math.abs(board[r] - col) == Math.abs(r - row)) return false;
         }
         return true;
     }
@@ -44,34 +43,30 @@ public class Main {
     public static void main(String[] args) {
 
         Stack<QueenState> stack = new Stack<>();
-        stack.push(new QueenState(new int[8], 0, null)); // start empty board
+        stack.push(new QueenState(new int[8], 0, null));
 
         while (!stack.isEmpty()) {
             QueenState curr = stack.pop();
 
-            // goal check (8 queens placed)
             if (curr.depth == 8) {
                 System.out.println("Solution found within depth limit:");
                 curr.printPath();
                 return;
             }
 
-            // depth limit check
             if (curr.depth == DEPTH_LIMIT) continue;
 
             int row = curr.depth;
 
-            // Try placing queen in each column
             for (int col = 0; col < 8; col++) {
                 if (isSafe(curr.board, row, col)) {
                     int[] newBoard = curr.board.clone();
                     newBoard[row] = col;
-
                     stack.push(new QueenState(newBoard, row + 1, curr));
                 }
             }
         }
 
-        System.out.println("No solution found within depth limit = " + DEPTH_LIMIT);
+        System.out.println("No solution found.");
     }
 }
