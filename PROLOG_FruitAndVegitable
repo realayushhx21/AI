@@ -1,0 +1,56 @@
+/* ----------- FACTS ----------- */
+
+/* Fruit items */
+fruit(apple).
+fruit(mango).
+fruit(banana).
+fruit(grapes).
+fruit(orange).
+
+/* Vegetable items */
+vegetable(tomato).
+vegetable(carrot).
+vegetable(potato).
+vegetable(spinach).
+vegetable(cabbage).
+
+/* Additional properties */
+has_seeds(apple).
+has_seeds(mango).
+has_seeds(tomato).
+has_seeds(orange).
+has_seeds(grapes).
+
+is_leafy(spinach).
+is_leafy(cabbage).
+
+root_veg(carrot).
+root_veg(potato).
+
+
+/* ----------- CLASSIFICATION RULES ----------- */
+
+/* A food item is classified as edible plant produce if it's a fruit or vegetable */
+edible(X) :-
+    fruit(X);
+    vegetable(X).
+
+/* Fruits with seeds (useful classification rule) */
+seeded_fruit(X) :-
+    fruit(X),
+    has_seeds(X).
+
+/* Vegetables with seeds (botanically fruits but used as vegetables) */
+seeded_vegetable(X) :-
+    vegetable(X),
+    has_seeds(X).
+
+/* Green leafy vegetables */
+leafy_vegetable(X) :-
+    vegetable(X),
+    is_leafy(X).
+
+/* Root vegetables classification */
+root_vegetable(X) :-
+    vegetable(X),
+    root_veg(X).
