@@ -1,0 +1,75 @@
+import java.util.*;
+
+class MazeState {
+    int x, y, depth;
+    MazeState parent;
+
+    MazeState(int x, int y, int depth, MazeState parent) {
+        this.x = x;
+        this.y = y;
+        this.depth = depth;
+        this.parent = parent;
+    }
+
+    void printPath() {
+        if (parent != null) parent.printPath();
+        System.out.println("(" + x + "," + y + ")");
+    }
+}
+
+public class Main {
+
+    static int[][] maze = {
+        {0, 0, 0},
+        {1, 1, 0},
+        {0, 0, 0}
+    };
+
+    static int rows = maze.length;
+    static int cols = maze[0].length;
+
+    static int[][] moves = {{-1,0}, {1,0}, {0,-1}, {0,1}};
+
+    static int DEPTH_LIMIT = 2;  // try changing 1, 2, 3…
+
+    public static void main(String[] args) {
+
+        int startX = 0, startY = 0;
+        int goalX = 0, goalY = 2;
+
+        Stack<MazeState> stack = new Stack<>();
+
+        stack.push(new MazeState(startX, startY, 0, null));
+
+        while (!stack.isEmpty()) {
+
+            MazeState curr = stack.pop();
+
+            // Goal found
+            if (curr.x == goalX && curr.y == goalY) {
+                System.out.println("Goal Found:");
+                curr.printPath();
+                return;
+            }
+
+            // Depth Limit reached
+            if (curr.depth == DEPTH_LIMIT)
+                continue;
+
+            // Expand neighbors
+            for (int[] move : moves) {
+                int nx = curr.x + move[0];
+                int ny = curr.y + move[1];
+
+                if (nx >= 0 && nx < rows &&
+                    ny >= 0 && ny < cols &&
+                    maze[nx][ny] == 0) {
+
+                    stack.push(new MazeState(nx, ny, curr.depth + 1, curr));
+                }
+            }
+        }
+
+        System.out.println("Goal NOT found within depth " + DEPTH_LIMIT);
+    }
+}

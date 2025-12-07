@@ -1,0 +1,97 @@
+import java.util.*;
+
+class State {
+    int Mleft, Cleft;   // missionaries & cannibals on left
+    int Mright, Cright; // on right
+    int boat;           // 0 = left, 1 = right
+    int depth;
+    State parent;
+
+    State(int Ml, int Cl, int Mr, int Cr, int boat, int depth, State parent) {
+        this.Mleft = Ml; this.Cleft = Cl;
+        this.Mright = Mr; this.Cright = Cr;
+        this.boat = boat;
+        this.depth = depth;
+        this.parent = parent;
+    }
+
+    void printPath() {
+        if (parent != null) parent.printPath();
+        System.out.println("(" + Mleft + "M," + Cleft + "C | "
+                           + Mright + "M," + Cright + "C | boat=" 
+                           + (boat==0?"Left":"Right") + ")");
+    }
+}
+
+public class Main {
+
+    static int DEPTH_LIMIT = 11;
+
+    // validity check
+    static boolean isValid(State s) {
+        if (s.Mleft < 0 || s.Cleft < 0 || s.Mright < 0 || s.Cright < 0)
+            return false;
+        if (s.Mleft < s.Cleft && s.Mleft != 0) return false;
+        if (s.Mright < s.Cright && s.Mright != 0) return false;
+        return true;
+    }
+
+    public static void main(String[] args) {
+
+        State start = new State(3, 3, 0, 0, 0, 0, null);
+        State goal  = new State(0, 0, 3, 3, 1, 0, null);
+
+        Stack<State> stack = new Stack<>();
+        Set<String> visited = new HashSet<>();
+
+        stack.push(start);
+
+        while (!stack.isEmpty()) {
+            State curr = stack.pop();
+
+            String key = curr.Mleft + "" + curr.Cleft + "" + curr.boat;
+            if (visited.contains(key)) continue;
+            visited.add(key);
+
+            // goal check
+            if (curr.Mleft == 0 && curr.Cleft == 0 && curr.boat == 1) {
+                System.out.println("Goal Found (DLS):");
+                curr.printPath();
+                return;
+            }
+
+            // depth limited
+            if (curr.depth == DEPTH_LIMIT) continue;
+
+            // possible moves
+            int[][] moves = {{1,0},{0,1},{1,1},{2,0},{0,2}};
+
+            for (int[] m : moves) {
+                int M = m[0], C = m[1];
+
+                State next;
+                if (curr.boat == 0) {
+                    // boat from left -> right
+                    next = new State(
+                        curr.Mleft - M, curr.Cleft - C,
+                        curr.Mright + M, curr.Cright + C,
+                        1, curr.depth + 1, curr
+                    );
+                } else {
+                    // boat from right -> left
+                    next = new State(
+                        curr.Mleft + M, curr.Cleft + C,
+                        curr.Mright - M, curr.Cright - C,
+                        0, curr.depth + 1, curr
+                    );
+                }
+
+                if (isValid(next)) {
+                    stack.push(next);
+                }
+            }
+        }
+
+        System.out.println("Goal NOT found within depth limit.");
+    }
+}
