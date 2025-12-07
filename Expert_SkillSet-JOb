@@ -1,0 +1,26 @@
+/* -------- FACTS -------- */
+
+/* Skills a person has */
+has(alice, coding).
+has(alice, problem_solving).
+
+has(bob, communication).
+has(bob, teaching).
+
+has(carol, design).
+has(carol, creativity).
+
+/* Skills required for each job */
+requires(software_developer, coding).
+requires(software_developer, problem_solving).
+
+requires(teacher, communication).
+requires(teacher, teaching).
+
+requires(graphic_designer, design).
+requires(graphic_designer, creativity).
+
+
+suitable(Person, Job) :-
+    requires(Job, Skill),
+    has(Person, Skill).
