@@ -29,3 +29,42 @@ sibling(X, Y) :- parent(Z, X), parent(Z, Y), X \= Y.
 % brother and sister
 brother(X, Y) :- male(X), sibling(X, Y).
 sister(X, Y) :- female(X), sibling(X, Y).
+
+===============================================================2code=======================
+% --- Facts ---
+father(john, david).
+father(john, emma).
+mother(susan, david).
+mother(susan, emma).
+
+father(david, lily).
+mother(anna, lily).
+
+% --- Rules ---
+parent(X,Y) :- father(X,Y).
+parent(X,Y) :- mother(X,Y).
+
+sibling(X,Y) :- parent(P,X), parent(P,Y), X \= Y.
+
+grandfather(X,Y) :- father(X,Z), parent(Z,Y).
+grandmother(X,Y) :- mother(X,Z), parent(Z,Y).
+
+% --- Helper to check relationships ---
+check_relation(father, X, Y) :- father(X,Y).
+check_relation(mother, X, Y) :- mother(X,Y).
+check_relation(sibling, X, Y) :- sibling(X,Y).
+check_relation(grandfather, X, Y) :- grandfather(X,Y).
+check_relation(grandmother, X, Y) :- grandmother(X,Y).
+
+% --- Start Expert System ---
+start :-
+    write('--- Family Tree Expert System ---'), nl,
+    write('Answer names in lowercase, ending with a period (e.g., john.)'), nl,
+    write('Which relationship do you want to check? (father/mother/sibling/grandfather/grandmother)'), nl,
+    read(Rel),
+    write('Enter the first person: '), read(P1),
+    write('Enter the second person: '), read(P2),
+    (   check_relation(Rel, P1, P2)
+    ->  write('Yes, the relationship exists.'), nl
+    ;   write('No such relationship found.'), nl
+    ).
