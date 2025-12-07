@@ -20,24 +20,31 @@ class MazeState {
 public class Main {
 
     static int[][] maze = {
-        {0, 0, 0},
-        {1, 1, 0},
-        {0, 0, 0}
+        {0, 0, 0, 0},
+        {1, 1, 0, 0},
+        {0, 0, 0, 0}
     };
 
     static int rows = maze.length;
     static int cols = maze[0].length;
 
+    // up, down, left, right
     static int[][] moves = {{-1,0}, {1,0}, {0,-1}, {0,1}};
 
-    static int DEPTH_LIMIT = 2;  // try changing 1, 2, 3…
+    static int DEPTH_LIMIT = 7;  // keep DLS
 
     public static void main(String[] args) {
 
         int startX = 0, startY = 0;
-        int goalX = 0, goalY = 2;
+        int goalX = 2, goalY = 3;
 
         Stack<MazeState> stack = new Stack<>();
+
+        // bestDepth[x][y] = smallest depth at which we've seen this cell
+        int[][] bestDepth = new int[rows][cols];
+        for (int i = 0; i < rows; i++) {
+            Arrays.fill(bestDepth[i], Integer.MAX_VALUE);
+        }
 
         stack.push(new MazeState(startX, startY, 0, null));
 
@@ -45,16 +52,22 @@ public class Main {
 
             MazeState curr = stack.pop();
 
+            // depth limit check
+            if (curr.depth > DEPTH_LIMIT)
+                continue;
+
+            // if we've seen (x,y) at a shallower or equal depth, skip
+            if (curr.depth >= bestDepth[curr.x][curr.y])
+                continue;
+
+            bestDepth[curr.x][curr.y] = curr.depth;
+
             // Goal found
             if (curr.x == goalX && curr.y == goalY) {
-                System.out.println("Goal Found:");
+                System.out.println("Goal Found (within depth " + DEPTH_LIMIT + "):");
                 curr.printPath();
                 return;
             }
-
-            // Depth Limit reached
-            if (curr.depth == DEPTH_LIMIT)
-                continue;
 
             // Expand neighbors
             for (int[] move : moves) {
@@ -65,6 +78,7 @@ public class Main {
                     ny >= 0 && ny < cols &&
                     maze[nx][ny] == 0) {
 
+                    // next depth = curr.depth + 1
                     stack.push(new MazeState(nx, ny, curr.depth + 1, curr));
                 }
             }
