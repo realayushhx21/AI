@@ -2,27 +2,39 @@ import java.util.*;
 
 public class Main {
 
-    static Map<String,Integer> h = new HashMap<>();
-    static Map<String,List<String>> g = new HashMap<>();
+    static Map<String, Integer> h = new HashMap<>();   // heuristic values
+    static Map<String, List<String>> graph = new HashMap<>();  // adjacency list
 
-    // Add bidirectional edge
+    // Add graph connections (unweighted → cost = 1)
     static void add(String u, String v) {
-        g.putIfAbsent(u,new ArrayList<>());
-        g.putIfAbsent(v,new ArrayList<>());
-        g.get(u).add(v);
-        g.get(v).add(u);
+        graph.putIfAbsent(u, new ArrayList<>());
+        graph.putIfAbsent(v, new ArrayList<>());
+        graph.get(u).add(v);
+        graph.get(v).add(u);
+    }
+
+    static class Node {
+        String name;
+        int g; // cost so far
+        int f; // g + h
+
+        Node(String name, int gCost) {
+            this.name = name;
+            this.g = gCost;
+            this.f = gCost + h.get(name);
+        }
     }
 
     public static void main(String[] args) {
 
-        // Heuristic values (distance to goal)
+        // -------- Heuristic Values --------
         h.put("A", 3);
         h.put("B", 2);
         h.put("C", 4);
         h.put("D", 1);
         h.put("E", 0); // goal
 
-        // Simple graph
+        // -------- Graph --------
         add("A","B");
         add("A","C");
         add("B","D");
@@ -32,37 +44,57 @@ public class Main {
         String start = "A";
         String goal = "E";
 
-        PriorityQueue<String> pq = new PriorityQueue<>((a,b) -> h.get(a) - h.get(b));
-        pq.add(start);
+        // -------- A* Frontier --------
+        PriorityQueue<Node> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a.f));
+        pq.add(new Node(start, 0));
 
+        Map<String, Integer> gCost = new HashMap<>(); // best known cost
+        gCost.put(start, 0);
+
+        Map<String, String> parent = new HashMap<>(); // store path
         Set<String> visited = new HashSet<>();
-        Map<String,String> parent = new HashMap<>();
 
-        while(!pq.isEmpty()) {
-            String current = pq.poll();
-            if(visited.contains(current)) continue;
-            visited.add(current);
+        while (!pq.isEmpty()) {
+            Node current = pq.poll();
 
-            System.out.println("Visiting: " + current + " h=" + h.get(current));
+            // Skip repeated states
+            if (visited.contains(current.name)) continue;
+            visited.add(current.name);
 
-            if(current.equals(goal)) {
+            System.out.println("Expanding: " + current.name +
+                    " (g=" + current.g + ", h=" + h.get(current.name) + ", f=" + current.f + ")");
+
+            // Goal reached
+            if (current.name.equals(goal)) {
+                System.out.println("\nGoal reached!");
+
+                // reconstruct path
                 List<String> path = new ArrayList<>();
-                while(current != null) {
-                    path.add(current);
-                    current = parent.get(current);
+                String s = goal;
+                while (s != null) {
+                    path.add(s);
+                    s = parent.get(s);
                 }
                 Collections.reverse(path);
-                System.out.println("\nGoal reached! Path:");
-                System.out.println(String.join(" ", path));
-                break;
+
+                System.out.println("Path: " + path);
+                System.out.println("Total Cost = " + current.g);
+                return;
             }
 
-            for(String neighbour: g.get(current)) {
-                if(!visited.contains(neighbour)) {
-                    parent.put(neighbour,current);
-                    pq.add(neighbour);
+            // Expand neighbors
+            for (String next : graph.get(current.name)) {
+
+                int newG = current.g + 1; // all edges cost = 1
+
+                if (!gCost.containsKey(next) || newG < gCost.get(next)) {
+                    gCost.put(next, newG);
+                    parent.put(next, current.name);
+                    pq.add(new Node(next, newG));
                 }
             }
         }
+
+        System.out.println("No path found.");
     }
 }
