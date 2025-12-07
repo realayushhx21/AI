@@ -1,0 +1,61 @@
+import java.util.*;
+
+public class Main {
+
+    static final int N = 8;        // 8×8 chessboard
+    static int[] board = new int[N]; // board[row] = column of queen
+
+    // Check if placing a queen at (row, col) is safe
+    static boolean isSafe(int row, int col) {
+        for (int prevRow = 0; prevRow < row; prevRow++) {
+            int prevCol = board[prevRow];
+
+            // 1. Same column
+            if (prevCol == col)
+                return false;
+
+            // 2. Same diagonal
+            if (Math.abs(prevRow - row) == Math.abs(prevCol - col))
+                return false;
+        }
+        return true;
+    }
+
+    // Backtracking search
+    static boolean solve(int row) {
+        if (row == N)        // all queens placed
+            return true;
+
+        for (int col = 0; col < N; col++) {
+
+            if (isSafe(row, col)) {  // constraint check
+                board[row] = col;    // place queen
+
+                if (solve(row + 1)) // solve next row
+                    return true;
+
+                board[row] = -1;     // backtrack
+            }
+        }
+        return false; // no valid position → backtrack
+    }
+
+    public static void main(String[] args) {
+        Arrays.fill(board, -1);
+
+        if (solve(0)) {
+            System.out.println("Solution:");
+            for (int row = 0; row < N; row++) {
+                for (int col = 0; col < N; col++) {
+                    if (board[row] == col)
+                        System.out.print(" Q ");
+                    else
+                        System.out.print(" . ");
+                }
+                System.out.println();
+            }
+        } else {
+            System.out.println("No solution exists");
+        }
+    }
+}
