@@ -1,0 +1,70 @@
+import java.util.*;
+
+class QueenState {
+    int[] board;     // board[row] = column of queen
+    int depth;       // number of queens placed
+    int h;           // heuristic: negative of safe queens
+    QueenState parent;
+
+    QueenState(int[] board, int depth, QueenState parent) {
+        this.board = board.clone();
+        this.depth = depth;
+        this.parent = parent;
+        this.h = -depth; // more queens placed = better (smaller h)
+    }
+
+    boolean isSafe(int row, int col) {
+        for (int r = 0; r < row; r++) {
+            int c = board[r];
+            if (c == col || Math.abs(c - col) == Math.abs(r - row))
+                return false;
+        }
+        return true;
+    }
+
+    void printBoard() {
+        for (int r = 0; r < depth; r++) {
+            for (int c = 0; c < 8; c++) {
+                System.out.print(board[r] == c ? "Q " : ". ");
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
+    void printPath() {
+        if (parent != null) parent.printPath();
+        printBoard();
+    }
+}
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        PriorityQueue<QueenState> pq = new PriorityQueue<>(Comparator.comparingInt(s -> s.h));
+        pq.add(new QueenState(new int[8], 0, null));
+
+        while (!pq.isEmpty()) {
+            QueenState curr = pq.poll();
+
+            if (curr.depth == 8) {
+                System.out.println("Solution found!");
+                curr.printPath();
+                return;
+            }
+
+            int row = curr.depth;
+
+            for (int col = 0; col < 8; col++) {
+                if (curr.isSafe(row, col)) {
+                    int[] newBoard = curr.board.clone();
+                    newBoard[row] = col;
+                    pq.add(new QueenState(newBoard, row + 1, curr));
+                }
+            }
+        }
+
+        System.out.println("No solution found.");
+    }
+}

@@ -1,0 +1,68 @@
+import java.util.*;
+
+public class Main {
+
+    static Map<String,Integer> h = new HashMap<>();
+    static Map<String,List<String>> g = new HashMap<>();
+
+    // Add bidirectional edge
+    static void add(String u, String v) {
+        g.putIfAbsent(u,new ArrayList<>());
+        g.putIfAbsent(v,new ArrayList<>());
+        g.get(u).add(v);
+        g.get(v).add(u);
+    }
+
+    public static void main(String[] args) {
+
+        // Heuristic values (distance to goal)
+        h.put("A", 3);
+        h.put("B", 2);
+        h.put("C", 4);
+        h.put("D", 1);
+        h.put("E", 0); // goal
+
+        // Simple graph
+        add("A","B");
+        add("A","C");
+        add("B","D");
+        add("C","D");
+        add("D","E");
+
+        String start = "A";
+        String goal = "E";
+
+        PriorityQueue<String> pq = new PriorityQueue<>((a,b) -> h.get(a) - h.get(b));
+        pq.add(start);
+
+        Set<String> visited = new HashSet<>();
+        Map<String,String> parent = new HashMap<>();
+
+        while(!pq.isEmpty()) {
+            String current = pq.poll();
+            if(visited.contains(current)) continue;
+            visited.add(current);
+
+            System.out.println("Visiting: " + current + " h=" + h.get(current));
+
+            if(current.equals(goal)) {
+                List<String> path = new ArrayList<>();
+                while(current != null) {
+                    path.add(current);
+                    current = parent.get(current);
+                }
+                Collections.reverse(path);
+                System.out.println("\nGoal reached! Path:");
+                System.out.println(String.join(" ", path));
+                break;
+            }
+
+            for(String neighbour: g.get(current)) {
+                if(!visited.contains(neighbour)) {
+                    parent.put(neighbour,current);
+                    pq.add(neighbour);
+                }
+            }
+        }
+    }
+}
