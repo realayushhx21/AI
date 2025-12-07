@@ -3,16 +3,18 @@ import java.util.*;
 public class Main {
 
     static class State {
-        int A, B; // jar amounts
-        int h;    // heuristic
+        int A, B;   // jug amounts
+        int h;      // heuristic value
+        State parent; // to trace full path
 
-        State(int A, int B, int goal) {
+        State(int A, int B, int goal, State parent) {
             this.A = A;
             this.B = B;
             this.h = Math.min(Math.abs(A - goal), Math.abs(B - goal));
-
+            this.parent = parent;
         }
 
+        @Override
         public String toString() {
             return "(" + A + ", " + B + ")";
         }
@@ -20,12 +22,12 @@ public class Main {
 
     public static void main(String[] args) {
 
-        int capA = 4, capB = 3, goal = 1;
+        int capA = 4, capB = 3, goal = 2;
 
         PriorityQueue<State> pq = new PriorityQueue<>(Comparator.comparingInt(s -> s.h));
         HashSet<String> visited = new HashSet<>();
 
-        State start = new State(0, 0, goal);
+        State start = new State(0, 0, goal, null);
         pq.add(start);
 
         while (!pq.isEmpty()) {
@@ -34,7 +36,22 @@ public class Main {
             System.out.println("Visiting: " + curr + "  h=" + curr.h);
 
             if (curr.A == goal || curr.B == goal) {
-                System.out.println("\nGoal reached: " + curr);
+                System.out.println("\n Goal reached at: " + curr + "\n");
+
+                // Build path
+                List<State> path = new ArrayList<>();
+                while (curr != null) {
+                    path.add(curr);
+                    curr = curr.parent;
+                }
+                Collections.reverse(path);
+
+                System.out.println(" Path taken:");
+                for (State s : path) {
+                    System.out.println("→ " + s);
+                }
+
+                System.out.println("\nTotal steps: " + (path.size() - 1));
                 return;
             }
 
@@ -42,30 +59,30 @@ public class Main {
             if (visited.contains(key)) continue;
             visited.add(key);
 
-            // Generate all possible next moves
+            // Generate next states
             ArrayList<State> next = new ArrayList<>();
 
-            // 1. Fill A
-            next.add(new State(capA, curr.B, goal));
-            // 2. Fill B
-            next.add(new State(curr.A, capB, goal));
-            // 3. Empty A
-            next.add(new State(0, curr.B, goal));
-            // 4. Empty B
-            next.add(new State(curr.A, 0, goal));
-            // 5. Pour A → B
-            int pourAB = Math.min(curr.A, capB - curr.B);
-            next.add(new State(curr.A - pourAB, curr.B + pourAB, goal));
-            // 6. Pour B → A
-            int pourBA = Math.min(curr.B, capA - curr.A);
-            next.add(new State(curr.A + pourBA, curr.B - pourBA, goal));
+            next.add(new State(capA, curr.B, goal, curr));  // Fill A
+            next.add(new State(curr.A, capB, goal, curr));  // Fill B
+            next.add(new State(0, curr.B, goal, curr));     // Empty A
+            next.add(new State(curr.A, 0, goal, curr));     // Empty B
 
-            // Add to PQ
+            // Pour A → B
+            int pourAB = Math.min(curr.A, capB - curr.B);
+            next.add(new State(curr.A - pourAB, curr.B + pourAB, goal, curr));
+
+            // Pour B → A
+            int pourBA = Math.min(curr.B, capA - curr.A);
+            next.add(new State(curr.A + pourBA, curr.B - pourBA, goal, curr));
+
+            // Add valid moves to PQ
             for (State s : next) {
                 String k = s.A + "," + s.B;
                 if (!visited.contains(k))
                     pq.add(s);
             }
         }
+
+        System.out.println(" No solution found.");
     }
 }
