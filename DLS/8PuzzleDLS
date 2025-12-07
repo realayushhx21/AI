@@ -1,0 +1,135 @@
+import java.util.*;
+
+public class Main {
+
+    static int[][] goal = {
+        {1, 2, 3},
+        {8, 0, 4},
+        {7, 6, 5}
+    };
+
+    static final int LIMIT = 7; // depth limit
+
+    // Copy state
+    static int[][] copyState(int[][] state) {
+        int[][] newState = new int[3][3];
+        for (int i = 0; i < 3; i++) newState[i] = state[i].clone();
+        return newState;
+    }
+
+    // Convert to string
+    static String stateToString(int[][] state) {
+        StringBuilder sb = new StringBuilder();
+        for (int[] r : state)
+            for (int v : r) sb.append(v);
+        return sb.toString();
+    }
+
+    // Find blank (0)
+    static int[] findBlank(int[][] s) {
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                if (s[i][j] == 0) return new int[]{i, j};
+        return new int[]{-1, -1};
+    }
+
+    // Generate neighbors
+    static List<int[][]> getNeighbors(int[][] state) {
+        List<int[][]> neighbors = new ArrayList<>();
+        int[] b = findBlank(state);
+        int x = b[0], y = b[1];
+
+        int[][] moves = {{-1,0},{1,0},{0,-1},{0,1}};
+
+        for (int[] m : moves) {
+            int nx = x + m[0], ny = y + m[1];
+            if (nx >= 0 && nx < 3 && ny >= 0 && ny < 3) {
+                int[][] newState = copyState(state);
+                int temp = newState[x][y];
+                newState[x][y] = newState[nx][ny];
+                newState[nx][ny] = temp;
+                neighbors.add(newState);
+            }
+        }
+        return neighbors;
+    }
+
+    // Node class for DFS
+    static class Node {
+        int[][] state;
+        List<int[][]> path;
+        int depth;
+
+        Node(int[][] state, List<int[][]> path, int depth) {
+            this.state = state;
+            this.path = path;
+            this.depth = depth;
+        }
+    }
+
+    // Depth Limited Search (DFS with limit)
+    static List<int[][]> depthLimitedSearch(int[][] start) {
+
+        Stack<Node> stack = new Stack<>();
+        stack.push(new Node(start, new ArrayList<>(), 0));
+
+        Set<String> visited = new HashSet<>();
+
+        while (!stack.isEmpty()) {
+            Node curr = stack.pop();
+
+            if (curr.depth > LIMIT) continue;
+
+            String key = stateToString(curr.state);
+            if (visited.contains(key)) continue;
+            visited.add(key);
+
+            curr.path.add(curr.state);
+
+            // Check goal
+            if (Arrays.deepEquals(curr.state, goal)) {
+                return curr.path;
+            }
+
+            // Only expand if we have not exceeded the depth limit
+            if (curr.depth < LIMIT) {
+                for (int[][] next : getNeighbors(curr.state)) {
+                    List<int[][]> newPath = new ArrayList<>(curr.path);
+                    stack.push(new Node(next, newPath, curr.depth + 1));
+                }
+            }
+        }
+
+        return new ArrayList<>();
+    }
+
+    // Print state
+    static void printState(int[][] s) {
+        for (int[] r : s) {
+            for (int v : r) System.out.print(v + " ");
+            System.out.println();
+        }
+    }
+
+    // Main
+    public static void main(String[] args) {
+
+        int[][] start = {
+            {2, 8, 3},
+            {1, 6, 4},
+            {7, 0, 5}
+        };
+
+        List<int[][]> solution = depthLimitedSearch(start);
+
+        if (!solution.isEmpty()) {
+            System.out.println("Solution found within depth limit 3:");
+            for (int[][] step : solution) {
+                printState(step);
+                System.out.println();
+            }
+        } else {
+            System.out.println("No solution within depth 3.");
+        }
+    }
+}
