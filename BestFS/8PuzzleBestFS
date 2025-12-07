@@ -8,7 +8,7 @@ public class Main {
         {7, 6, 5}
     };
 
-    // Heuristic: count of misplaced tiles
+    // Heuristic: number of misplaced tiles (excluding blank)
     static int heuristic(int[][] state) {
         int h = 0;
         for (int i = 0; i < 3; i++) {
@@ -21,7 +21,6 @@ public class Main {
         return h;
     }
 
-    // Find blank tile
     static int[] findBlank(int[][] state) {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
@@ -31,12 +30,12 @@ public class Main {
         return new int[]{-1, -1};
     }
 
-    
     static List<int[][]> getNeighbors(int[][] state) {
         List<int[][]> neighbors = new ArrayList<>();
         int[] blank = findBlank(state);
         int x = blank[0], y = blank[1];
-        int[][] moves = {{-1,0},{1,0},{0,-1},{0,1}}; // up down left right
+        int[][] moves = {{-1,0},{1,0},{0,-1},{0,1}}; 
+
         for (int[] move : moves) {
             int nx = x + move[0], ny = y + move[1];
             if (nx >= 0 && nx < 3 && ny >= 0 && ny < 3) {
@@ -50,7 +49,6 @@ public class Main {
         return neighbors;
     }
 
-    // Convert state to string (for visited set)
     static String stateToString(int[][] state) {
         StringBuilder sb = new StringBuilder();
         for (int[] row : state) {
@@ -59,7 +57,6 @@ public class Main {
         return sb.toString();
     }
 
-    // Copy state
     static int[][] copyState(int[][] state) {
         int[][] newState = new int[3][3];
         for (int i = 0; i < 3; i++)
@@ -67,7 +64,6 @@ public class Main {
         return newState;
     }
 
-    // Node class for priority queue
     static class Node {
         int h;
         int[][] state;
@@ -80,7 +76,6 @@ public class Main {
         }
     }
 
-    // Greedy Best-First Search
     static List<int[][]> greedyBestFirst(int[][] start) {
         PriorityQueue<Node> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a.h));
         Set<String> visited = new HashSet<>();
@@ -110,17 +105,18 @@ public class Main {
         return new ArrayList<>();
     }
 
-    // Print state
+    // Print puzzle state with heuristic
     static void printState(int[][] state) {
+        System.out.println("h = " + heuristic(state));
         for (int[] row : state) {
             for (int val : row) {
                 System.out.print(val + " ");
             }
             System.out.println();
         }
+        System.out.println("-------------------");
     }
 
-    // Main function
     public static void main(String[] args) {
         int[][] start = {
             {2, 8, 3},
@@ -129,11 +125,11 @@ public class Main {
         };
 
         List<int[][]> solution = greedyBestFirst(start);
+
         if (!solution.isEmpty()) {
-            System.out.println("Solved in " + (solution.size() - 1) + " moves");
+            System.out.println("Solved in " + (solution.size() - 1) + " moves:\n");
             for (int[][] step : solution) {
                 printState(step);
-                System.out.println();
             }
         } else {
             System.out.println("No solution found");
