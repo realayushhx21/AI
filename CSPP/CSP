@@ -1,0 +1,92 @@
+import java.util.*;
+
+public class Main {
+
+    // Change these to test other puzzles
+    static String word1 = "SEND";   // try "SENY" here
+    static String word2 = "MORE";
+    static String result = "MONEY";
+
+    static Map<Character, Integer> assign = new HashMap<>();
+    static boolean[] used = new boolean[10];
+    static Set<Character> letters = new LinkedHashSet<>();
+
+    // Collect all unique letters
+    static void collectLetters() {
+        letters.clear();
+        for (char c : word1.toCharArray()) letters.add(c);
+        for (char c : word2.toCharArray()) letters.add(c);
+        for (char c : result.toCharArray()) letters.add(c);
+    }
+
+    // Convert word to number using current assignment
+    static int wordToNumber(String w) {
+        int val = 0;
+        for (char c : w.toCharArray()) {
+            Integer d = assign.get(c);
+            if (d == null) return -1; // should not happen in solved state
+            val = val * 10 + d;
+        }
+        return val;
+    }
+
+    // Backtracking search
+    static boolean solve(List<Character> list, int index) {
+        if (index == list.size()) {
+            int n1 = wordToNumber(word1);
+            int n2 = wordToNumber(word2);
+            int n3 = wordToNumber(result);
+            return n1 + n2 == n3; // Check equation
+        }
+
+        char letter = list.get(index);
+
+        for (int digit = 0; digit <= 9; digit++) {
+
+            if (used[digit]) continue;
+
+            // Leading letters cannot be zero
+            if (digit == 0 &&
+                (letter == word1.charAt(0) ||
+                 letter == word2.charAt(0) ||
+                 letter == result.charAt(0))) {
+                continue;
+            }
+
+            assign.put(letter, digit);
+            used[digit] = true;
+
+            if (solve(list, index + 1))
+                return true;
+
+            assign.remove(letter);
+            used[digit] = false;
+        }
+
+        return false;
+    }
+
+    public static void main(String[] args) {
+
+        System.out.println("Solving: " + word1 + " + " + word2 + " = " + result);
+
+        collectLetters();
+        List<Character> vars = new ArrayList<>(letters);
+
+        if (solve(vars, 0)) {
+            System.out.println("Solution:");
+            // print in a stable order
+            for (char c : vars) {
+                System.out.println(c + " = " + assign.getOrDefault(c, -1));
+            }
+
+            System.out.println("\nCheck:");
+            System.out.println(word1 + " = " + wordToNumber(word1));
+            System.out.println(word2 + " = " + wordToNumber(word2));
+            System.out.println(result + " = " + wordToNumber(result));
+
+        } else {
+            System.out.println("No solution found for this puzzle.");
+        }
+    }
+}
