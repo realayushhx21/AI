@@ -1,0 +1,129 @@
+% ============================
+% Expert System: Skillset–Job Matching
+% ============================
+% Simple rule-based expert system in Prolog
+% It asks the user about their skills and suggests suitable jobs.
+% Tested in SWI-Prolog.
+
+:- dynamic known/3.
+
+% ----------------------------
+% Entry point
+% ----------------------------
+
+start :-
+    writeln('=== Skillset – Job Matching Expert System ==='),
+    writeln('Answer the following questions with yes. / no.'),
+    nl,
+    reset_answers,
+    findall(JobId, fits(JobId), Jobs),
+    nl,
+    (   Jobs == []
+    ->  writeln('No matching job found based on your current skills.')
+    ;   writeln('Based on your skills, you may be suitable for:'),
+        print_jobs(Jobs)
+    ),
+    nl,
+    writeln('Thank you for using the expert system !').
+
+% ----------------------------
+% Job definitions
+% job(JobId, JobName).
+% required_skills(JobId, [SkillList]).
+% ----------------------------
+
+job(web_dev,          'Web Developer').
+job(data_scientist,   'Data Scientist').
+job(ml_engineer,      'Machine Learning Engineer').
+job(sys_admin,        'System Administrator').
+job(network_engineer, 'Network Engineer').
+job(db_admin,         'Database Administrator').
+job(cybersec_analyst, 'Cybersecurity Analyst').
+job(mobile_dev,       'Mobile App Developer').
+job(uiux_designer,    'UI/UX Designer').
+job(cloud_engineer,   'Cloud Engineer').
+
+required_skills(web_dev,
+    [ html, css, javascript, git, basic_programming ]).
+
+required_skills(data_scientist,
+    [ python, statistics, machine_learning, sql, data_visualization ]).
+
+required_skills(ml_engineer,
+    [ python, machine_learning, deep_learning, git, linux ]).
+
+required_skills(sys_admin,
+    [ linux, shell_scripting, networking_basics, troubleshooting ]).
+
+required_skills(network_engineer,
+    [ networking_basics, routing_switching, tcp_ip, subnetting ]).
+
+required_skills(db_admin,
+    [ sql, database_design, backup_recovery, normalization ]).
+
+required_skills(cybersec_analyst,
+    [ networking_basics, security_fundamentals, linux, wireshark ]).
+
+required_skills(mobile_dev,
+    [ java_kotlin, android_dev, oop, git ]).
+
+required_skills(uiux_designer,
+    [ design_tools, wireframing, user_research, basic_html_css ]).
+
+required_skills(cloud_engineer,
+    [ cloud_platforms, linux, networking_basics, docker, devops_basics ]).
+
+% ----------------------------
+% Matching rule
+% A job fits if the user has ALL required skills.
+% ----------------------------
+
+fits(JobId) :-
+    required_skills(JobId, SkillList),
+    all_skills_present(SkillList).
+
+all_skills_present([]).
+all_skills_present([Skill | Rest]) :-
+    has_skill(Skill),
+    all_skills_present(Rest).
+
+% ----------------------------
+% Asking about skills
+% known(Answer, Skill, user).
+% Answer = yes / no
+% ----------------------------
+
+has_skill(Skill) :-
+    % If already known, reuse it
+    known(yes, Skill, user), !.
+
+has_skill(Skill) :-
+    known(no, Skill, user), !, fail.
+
+has_skill(Skill) :-
+    % Ask user
+    ask_skill(Skill).
+
+ask_skill(Skill) :-
+    format('Do you have skill "~w"? (yes/no): ', [Skill]),
+    read(Response),
+    nl,
+    (   Response == yes ; Response == y
+    ->  asserta(known(yes, Skill, user))
+    ;   asserta(known(no, Skill, user)), fail).
+
+% ----------------------------
+% Utility predicates
+% ----------------------------
+
+reset_answers :-
+    retractall(known(_, _, _)).
+
+print_jobs([]).
+print_jobs([JobId | Rest]) :-
+    job(JobId, Name),
+    format('- ~w (~w)~n', [Name, JobId]),
+    print_jobs(Rest).
+
+
+# ?- start.
